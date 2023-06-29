@@ -7,12 +7,30 @@ A go implementation of a game. For now no real definition of what it is about.
 
 ## Pre-requisites
 
-- Clone the repo: `git clone git@github.com:Knoblauchpilze/go-game.git`.
-- Install Go from [here](https://go.dev/doc/install). **NOTE**: this project expects Go 1.20 to be available on the system.
-- TODO: Describe DB tools
-- Go to the project's directory `cd ~/path/to/the/repo`.
-- Compile and install: `make`.
-- Execute any application with `make run app_name`.
+This repository requires (and make use) of the following tools:
+- [Go](https://go.dev/doc/install), version 1.20 has been used for development.
+- [Postgresql](https://www.postgresql.org/download/linux/ubuntu/)
+- [Docker](https://docs.docker.com/engine/install/ubuntu/)
+- [Migrate](https://github.com/golang-migrate/migrate/blob/master/cmd/migrate/README.md)
+
+## Code
+
+To clone the repo and build the project from source run:
+```bash
+git clone git@github.com:Knoblauchpilze/go-game.git
+```
+
+Then go to the db creation [section](#create-the-db-container) and follow the instructions.
+
+Finally go to the root of the repository and run:
+```bash
+make
+```
+
+You can execute the services with:
+```bash
+make run app_name
+```
 
 ## Create the DB
 
