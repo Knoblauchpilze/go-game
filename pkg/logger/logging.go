@@ -11,6 +11,7 @@ var configuration Configuration
 
 type Configuration struct {
 	Service string
+	Level   logrus.Level
 }
 
 func Configure(config Configuration) {
@@ -19,6 +20,7 @@ func Configure(config Configuration) {
 
 	logrus.SetFormatter(TerminalFormatter{})
 	configuration = config
+	logrus.SetLevel(config.Level)
 }
 
 func withService() *logrus.Entry {
