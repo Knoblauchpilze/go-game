@@ -3,6 +3,8 @@
 
 A go implementation of a game. For now no real definition of what it is about.
 
+[![codecov](https://codecov.io/gh/Knoblauchpilze/go-game/branch/master/graph/badge.svg?token=T0AX4BIS85)](https://codecov.io/gh/Knoblauchpilze/go-game)
+
 # Installation
 
 ## Pre-requisites
