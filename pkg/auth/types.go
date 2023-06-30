@@ -12,7 +12,7 @@ type Token struct {
 	Expiration time.Time
 }
 
-type Authenticater interface {
+type Authenticator interface {
 	GenerateToken(user uuid.UUID, password string) (Token, error)
 	GetToken(user uuid.UUID) (Token, error)
 }

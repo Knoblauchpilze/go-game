@@ -15,7 +15,7 @@ type authImpl struct {
 
 var TokenDefaultExpirationTime = 10 * time.Minute
 
-func NewAuthenticater() Authenticater {
+func NewAuthenticator() Authenticator {
 	return &authImpl{
 		tokens: make(map[uuid.UUID]Token),
 	}

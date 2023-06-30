@@ -12,7 +12,7 @@ import (
 func TestGenerateToken_InvalidPassword(t *testing.T) {
 	assert := assert.New(t)
 
-	auth := NewAuthenticater()
+	auth := NewAuthenticator()
 	id, _ := uuid.NewUUID()
 
 	_, err := auth.GenerateToken(id, "")
@@ -22,7 +22,7 @@ func TestGenerateToken_InvalidPassword(t *testing.T) {
 func TestGenerateToken(t *testing.T) {
 	assert := assert.New(t)
 
-	auth := NewAuthenticater()
+	auth := NewAuthenticator()
 	user, _ := uuid.NewUUID()
 
 	token, err := auth.GenerateToken(user, "foo")
@@ -39,7 +39,7 @@ func TestGenerateToken(t *testing.T) {
 func TestGetToken(t *testing.T) {
 	assert := assert.New(t)
 
-	auth := NewAuthenticater()
+	auth := NewAuthenticator()
 	user, _ := uuid.NewUUID()
 
 	check, _ := auth.GenerateToken(user, "foo")
@@ -54,7 +54,7 @@ func TestGetToken(t *testing.T) {
 func TestGetToken_InvalidId(t *testing.T) {
 	assert := assert.New(t)
 
-	auth := NewAuthenticater()
+	auth := NewAuthenticator()
 	id, _ := uuid.NewUUID()
 	id2, _ := uuid.NewUUID()
 

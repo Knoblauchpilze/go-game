@@ -15,7 +15,7 @@ var UsersURLRoute = "/users"
 
 var userIdDataKey = "user"
 
-func UsersRouter(udb users.UserManager, tokens auth.Authenticater) http.Handler {
+func UsersRouter(udb users.UserManager, tokens auth.Authenticator) http.Handler {
 	r := chi.NewRouter()
 
 	r.Route("/", func(r chi.Router) {

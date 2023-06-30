@@ -8,6 +8,7 @@ import (
 
 	"github.com/KnoblauchPilze/go-game/cmd/server/routes"
 	"github.com/KnoblauchPilze/go-game/pkg/auth"
+	"github.com/KnoblauchPilze/go-game/pkg/db"
 	"github.com/KnoblauchPilze/go-game/pkg/logger"
 	"github.com/KnoblauchPilze/go-game/pkg/users"
 	"github.com/go-chi/chi/v5"
@@ -38,7 +39,9 @@ func main() {
 	r.Use(middleware.Recoverer)
 
 	udb := users.NewUserManager()
-	tokens := auth.NewAuthenticater()
+	tokens := auth.NewAuthenticator()
+	db := db.NewRepository()
+	db.Foo()
 
 	r.Mount(routes.SignUpURLRoute, routes.SignUpRouter(udb))
 	r.Mount(routes.LoginURLRoute, routes.LoginRouter(udb, tokens))

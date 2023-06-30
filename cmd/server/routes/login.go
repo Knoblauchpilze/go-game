@@ -17,7 +17,7 @@ import (
 
 var LoginURLRoute = "/login"
 
-func LoginRouter(udb users.UserManager, tokens auth.Authenticater) http.Handler {
+func LoginRouter(udb users.UserManager, tokens auth.Authenticator) http.Handler {
 	r := chi.NewRouter()
 
 	r.Route("/", func(r chi.Router) {
@@ -28,7 +28,7 @@ func LoginRouter(udb users.UserManager, tokens auth.Authenticater) http.Handler 
 	return r
 }
 
-func generateLoginHandler(udb users.UserManager, tokens auth.Authenticater) http.HandlerFunc {
+func generateLoginHandler(udb users.UserManager, tokens auth.Authenticator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		reqData, ok := middlewares.GetRequestDataFromContextOrFail(w, r)
 		if !ok {
@@ -60,7 +60,7 @@ func generateLoginHandler(udb users.UserManager, tokens auth.Authenticater) http
 	}
 }
 
-func loginUser(in types.UserData, ud users.User, udb users.UserManager, tokens auth.Authenticater) (types.LoginResponse, error) {
+func loginUser(in types.UserData, ud users.User, udb users.UserManager, tokens auth.Authenticator) (types.LoginResponse, error) {
 	var err error
 	var out types.LoginResponse
 
