@@ -12,11 +12,13 @@ import (
 	"github.com/KnoblauchPilze/go-game/pkg/users"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
 	logger.Configure(logger.Configuration{
 		Service: "server",
+		Level:   logrus.DebugLevel,
 	})
 
 	port := 3000
@@ -32,7 +34,7 @@ func main() {
 
 	r := chi.NewRouter()
 
-	r.Use(middleware.Logger)
+	r.Use(middleware.RequestLogger(routes.TimingLogFormatter{}))
 	r.Use(middleware.Recoverer)
 
 	udb := users.NewUserManager()
