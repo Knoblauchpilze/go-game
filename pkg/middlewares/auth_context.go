@@ -17,7 +17,7 @@ var authenticationTokenKey = "token"
 
 var genErrMsg = "invalid authentication header"
 
-func GenerateAuthenticationContext(tokens auth.Authenticater) func(http.Handler) http.Handler {
+func GenerateAuthenticationContext(tokens auth.Authenticator) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// https://stackoverflow.com/questions/33265812/best-http-authorization-header-type-for-jwt
