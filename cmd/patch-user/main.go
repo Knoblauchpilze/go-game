@@ -11,54 +11,54 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var createCmd = &cobra.Command{
-	Use:   "create-user",
-	Short: "Create a new user",
+var patchCmd = &cobra.Command{
+	Use:   "patch-user",
+	Short: "Patch data of an existing user",
 	Args:  cobra.RangeArgs(0, 3),
-	Run:   createUserCmdBody,
+	Run:   patchUserCmdBody,
 }
 
 const serverUrl = "http://localhost:3000"
 
 func main() {
 	logger.Configure(logger.Configuration{
-		Service: "create-user",
+		Service: "patch-user",
 		Level:   logrus.DebugLevel,
 	})
 
-	if err := createCmd.Execute(); err != nil {
-		logger.Fatalf("create-user command failed (err: %v)", err)
+	if err := patchCmd.Execute(); err != nil {
+		logger.Fatalf("patch-user command failed (err: %v)", err)
 	}
 }
 
-func createUserCmdBody(cmd *cobra.Command, args []string) {
-	userDto := dtos.UserDto{
+func patchUserCmdBody(cmd *cobra.Command, args []string) {
+	ud := dtos.UserDto{
 		Mail:     "toto@some-mail.com",
 		Name:     "toto",
 		Password: "123456",
 	}
 
 	if len(args) > 0 {
-		userDto.Mail = args[0]
+		ud.Mail = args[0]
 	}
 	if len(args) > 1 {
-		userDto.Name = args[1]
+		ud.Name = args[1]
 	}
 	if len(args) > 2 {
-		userDto.Password = args[2]
+		ud.Password = args[2]
 	}
 
-	logger.Infof("creating new user %+v", userDto)
+	logger.Infof("updating details for %+v", ud)
 
-	if err := doServerRequest(userDto); err != nil {
-		logger.Errorf("create operation failed (err: %v)", err)
+	if err := doServerRequest(ud); err != nil {
+		logger.Errorf("update operation failed (err: %v)", err)
 	}
 }
 
 func doServerRequest(in dtos.UserDto) error {
-	url := fmt.Sprintf("%s/users", serverUrl)
+	url := fmt.Sprintf("%s/users/%s", serverUrl, in.Id)
 
-	rb := connection.NewHttpPostRequestBuilder()
+	rb := connection.NewHttpPatchRequestBuilder()
 	rb.SetUrl(url)
 	rb.SetBody("application/json", in)
 
@@ -71,7 +71,7 @@ func doServerRequest(in dtos.UserDto) error {
 		return err
 	}
 
-	var out dtos.PostResponse
+	var out dtos.PatchResponse
 	if err = rest.GetBodyFromHttpResponseAs(resp, &out); err != nil {
 		return err
 	}

@@ -4,8 +4,6 @@ import (
 	"net/http"
 
 	"github.com/KnoblauchPilze/go-game/pkg/dtos"
-	"github.com/KnoblauchPilze/go-game/pkg/errors"
-	"github.com/KnoblauchPilze/go-game/pkg/logger"
 	"github.com/KnoblauchPilze/go-game/pkg/middlewares"
 	"github.com/KnoblauchPilze/go-game/pkg/users"
 	"github.com/go-chi/chi/v5"
@@ -17,9 +15,9 @@ func UsersRouter(repo users.Repository) http.Handler {
 	r.Route("/", func(r chi.Router) {
 		r.Use(middlewares.RequestCtx)
 		r.Get("/", getUsers(repo))
+		r.Post("/", createUser(repo))
 
 		r.Route("/{user}", func(r chi.Router) {
-			r.Post("/", createUser(repo))
 			r.Get("/", getUser(repo))
 			r.Patch("/", patchUser(repo))
 			r.Delete("/", deleteUser(repo))
@@ -36,8 +34,13 @@ func getUsers(repo users.Repository) http.HandlerFunc {
 			return
 		}
 
-		logger.Infof("Hello from getUsers")
-		reqData.FailWithErrorAndCode(errors.NewCode(errors.ErrNotImplemented), http.StatusInternalServerError, w)
+		users, err := repo.GetAll()
+		if err != nil {
+			reqData.FailWithErrorAndCode(err, http.StatusInternalServerError, w)
+			return
+		}
+
+		reqData.WriteDetails(users, w)
 	}
 }
 

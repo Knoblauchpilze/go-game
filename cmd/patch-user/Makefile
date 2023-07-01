@@ -1,6 +1,6 @@
 # Default variables
 INSTALL_FOLDER ?= ../../bin
-APPLICATION ?= update-user
+APPLICATION ?= patch-user
 
 BRANCH ?= master
 TAG ?= ${BRANCH}
@@ -12,10 +12,10 @@ setup:
 	mkdir -p build
 
 release: setup
-	go build -o build/update-user main.go
+	go build -o build/patch-user main.go
 
 clean:
 	rm -rf build
 
 run: install
-	./build/update-user
+	./build/patch-user

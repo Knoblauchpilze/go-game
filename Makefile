@@ -8,8 +8,8 @@ all: setup install
 install:
 	@echo "$(COLOR_HIGHLIGHT_BLUE)Building apps...$(COLOR_CLEAR)"
 	@cd cmd/create-user && make install
-	@cd cmd/update-user && make install
 	@cd cmd/get-user && make install
+	@cd cmd/patch-user && make install
 	@cd cmd/delete-user && make install
 	@echo "$(COLOR_HIGHLIGHT_GREEN)Success!$(COLOR_CLEAR)"
 
@@ -22,8 +22,8 @@ clean:
 	@echo "$(COLOR_HIGHLIGHT_BLUE)Cleaning apps...$(COLOR_CLEAR)"
 	@cd bin && ls | grep -v .gitignore | xargs rm -fr
 	@cd cmd/create-user && make clean
-	@cd cmd/update-user && make clean
 	@cd cmd/get-user && make clean
+	@cd cmd/patch-user && make clean
 	@cd cmd/delete-user && make clean
 	@echo "$(COLOR_HIGHLIGHT_GREEN)Success!$(COLOR_CLEAR)"
 

@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
+
+	"github.com/KnoblauchPilze/go-game/pkg/connection"
 	"github.com/KnoblauchPilze/go-game/pkg/dtos"
-	"github.com/KnoblauchPilze/go-game/pkg/errors"
 	"github.com/KnoblauchPilze/go-game/pkg/logger"
+	"github.com/KnoblauchPilze/go-game/pkg/rest"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -11,9 +14,11 @@ import (
 var deleteCmd = &cobra.Command{
 	Use:   "delete-user",
 	Short: "Delete an existing user",
-	Args:  cobra.RangeArgs(0, 1),
+	Args:  cobra.ExactArgs(1),
 	Run:   deleteUserCmdBody,
 }
+
+const serverUrl = "http://localhost:3000"
 
 func main() {
 	logger.Configure(logger.Configuration{
@@ -27,23 +32,36 @@ func main() {
 }
 
 func deleteUserCmdBody(cmd *cobra.Command, args []string) {
-	ud := dtos.UserDto{
-		Mail:     "toto@some-mail.com",
-		Name:     "toto",
-		Password: "123456",
-	}
+	id := args[0]
 
-	if len(args) > 0 {
-		ud.Mail = args[0]
-	}
+	logger.Infof("deleting user %s", id)
 
-	logger.Infof("deleting data for %+v", ud)
-
-	if err := doServerRequest(ud); err != nil {
+	if err := doServerRequest(id); err != nil {
 		logger.Errorf("delete operation failed (err: %v)", err)
 	}
 }
 
-func doServerRequest(in dtos.UserDto) error {
-	return errors.NewCode(errors.ErrNotImplemented)
+func doServerRequest(id string) error {
+	url := fmt.Sprintf("%s/users/%s", serverUrl, id)
+
+	rb := connection.NewHttpDeleteRequestBuilder()
+	rb.SetUrl(url)
+
+	req, err := rb.Build()
+	if err != nil {
+		return err
+	}
+	resp, err := req.Perform()
+	if err != nil {
+		return err
+	}
+
+	var out dtos.DeleteResponse
+	if err = rest.GetBodyFromHttpResponseAs(resp, &out); err != nil {
+		return err
+	}
+
+	logger.Infof("server response: %+v", out)
+
+	return nil
 }
