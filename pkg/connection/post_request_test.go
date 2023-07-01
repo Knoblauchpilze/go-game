@@ -28,10 +28,9 @@ func TestHttpPostRequest_InvalidUrl(t *testing.T) {
 	assert := assert.New(t)
 
 	mc := &mockHttpClient{}
-	url := "http://test.com/Segment%%2815197306101420000%29.ts"
 
 	rb := NewHttpPostRequestBuilder()
-	rb.SetUrl(url)
+	rb.SetUrl(invalidUrl)
 	rb.setHttpClient(mc)
 	rw, err := rb.Build()
 	assert.Nil(err)
