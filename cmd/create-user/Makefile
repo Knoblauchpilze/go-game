@@ -1,6 +1,6 @@
 # Default variables
 INSTALL_FOLDER ?= ../../bin
-APPLICATION ?= client
+APPLICATION ?= create-user
 
 BRANCH ?= master
 TAG ?= ${BRANCH}
@@ -12,7 +12,10 @@ setup:
 	mkdir -p build
 
 release: setup
-	go build -o build/client main.go
+	go build -o build/create-user main.go
 
 clean:
 	rm -rf build
+
+run: install
+	./build/create-user

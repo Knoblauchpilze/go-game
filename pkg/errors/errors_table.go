@@ -4,6 +4,7 @@ type ErrorCode int
 
 const (
 	errGenericErrorCode ErrorCode = iota
+	ErrInvalidUserMail
 	ErrInvalidUserName
 	ErrInvalidPassword
 	ErrUserAlreadyExists
@@ -29,10 +30,13 @@ const (
 	ErrPostRequestFailed
 	ErrGetRequestFailed
 
+	ErrNotImplemented
+
 	lastErrorCode
 )
 
 var errorsCodeToMessage = map[ErrorCode]string{
+	ErrInvalidUserMail:     "user mail is invalid",
 	ErrInvalidUserName:     "user name is invalid",
 	ErrInvalidPassword:     "password is invalid",
 	ErrUserAlreadyExists:   "user already exists",
@@ -57,6 +61,8 @@ var errorsCodeToMessage = map[ErrorCode]string{
 	ErrPostInvalidData:   "invalid post request data",
 	ErrPostRequestFailed: "post request failed",
 	ErrGetRequestFailed:  "get request failed",
+
+	ErrNotImplemented: "not implemented",
 }
 
 var defaultErrorMessage = "unexpected error occurred"

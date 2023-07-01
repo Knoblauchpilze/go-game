@@ -7,8 +7,6 @@ import (
 	"strconv"
 
 	"github.com/KnoblauchPilze/go-game/cmd/server/routes"
-	"github.com/KnoblauchPilze/go-game/pkg/auth"
-	"github.com/KnoblauchPilze/go-game/pkg/db"
 	"github.com/KnoblauchPilze/go-game/pkg/logger"
 	"github.com/KnoblauchPilze/go-game/pkg/users"
 	"github.com/go-chi/chi/v5"
@@ -38,14 +36,9 @@ func main() {
 	r.Use(middleware.RequestLogger(routes.TimingLogFormatter{}))
 	r.Use(middleware.Recoverer)
 
-	udb := users.NewUserManager()
-	tokens := auth.NewAuthenticator()
-	db := db.NewRepository()
-	db.Foo()
+	usersRepo := users.NewMemoryRepository()
 
-	r.Mount(routes.SignUpURLRoute, routes.SignUpRouter(udb))
-	r.Mount(routes.LoginURLRoute, routes.LoginRouter(udb, tokens))
-	r.Mount(routes.UsersURLRoute, routes.UsersRouter(udb, tokens))
+	r.Mount("/users", routes.UsersRouter(usersRepo))
 
 	logger.Infof("Starting server on port %d...", port)
 	http.ListenAndServe(fmt.Sprintf(":%d", port), r)
