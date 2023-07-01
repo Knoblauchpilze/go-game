@@ -48,6 +48,20 @@ func TestRequestData_WriteDetails(t *testing.T) {
 	assert.Equal(32, val)
 }
 
+func TestRequestData_NoHeadersWritten(t *testing.T) {
+	assert := assert.New(t)
+
+	rq := NewRequestData()
+	mrw := mockResponseWriter{}
+	rq.FailWithErrorAndCode(nil, http.StatusBadGateway, &mrw)
+	assert.Equal(0, len(mrw.Header()))
+
+	rq = NewRequestData()
+	mrw = mockResponseWriter{}
+	rq.WriteDetails(32, &mrw)
+	assert.Equal(0, len(mrw.Header()))
+}
+
 func TestGetRequestDataFromContextOrFail_EmptyContext(t *testing.T) {
 	assert := assert.New(t)
 

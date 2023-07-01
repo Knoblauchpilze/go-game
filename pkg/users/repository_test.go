@@ -12,7 +12,6 @@ var defaultTestUser = User{Id: uuid.New(), Mail: "some@mail", Name: "someName", 
 
 type repositoryGenerator func() Repository
 
-// TODO: Test suite here:
 // https://pkg.go.dev/github.com/stretchr/testify/suite
 type UsersRepositoryTestSuite struct {
 	suite.Suite
