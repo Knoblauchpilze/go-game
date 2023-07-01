@@ -23,9 +23,9 @@ func main() {
 	port := 3000
 	if len(os.Args) > 1 {
 		if maybePort, err := strconv.Atoi(os.Args[1]); err != nil {
-			logger.Warnf("Ignoring provided port \"%s\" (err: %v)", os.Args[1], err)
+			logger.Warnf("ignoring provided port \"%s\" (err: %v)", os.Args[1], err)
 		} else if maybePort <= 0 || maybePort > 65535 {
-			logger.Warnf("Ignoring provided port \"%d\" (err: not in range ]0; 65535])", maybePort)
+			logger.Warnf("ignoring provided port \"%d\" (err: not in range ]0; 65535])", maybePort)
 		} else {
 			port = maybePort
 		}
@@ -36,10 +36,11 @@ func main() {
 	r.Use(middleware.RequestLogger(routes.TimingLogFormatter{}))
 	r.Use(middleware.Recoverer)
 
-	usersRepo := users.NewMemoryRepository()
+	// repo := users.NewMemoryRepository()
+	repo := users.NewDbRepository()
 
-	r.Mount("/users", routes.UsersRouter(usersRepo))
+	r.Mount("/users", routes.UsersRouter(repo))
 
-	logger.Infof("Starting server on port %d...", port)
+	logger.Infof("starting server on port %d...", port)
 	http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 }

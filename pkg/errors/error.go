@@ -172,7 +172,7 @@ func (e errorImpl) marshalCause() json.RawMessage {
 	}
 
 	if err != nil {
-		logger.Errorf("Failed to marshal cause %v (%v)", e.Cause, err)
+		logger.Errorf("failed to marshal cause %v (%v)", e.Cause, err)
 	}
 
 	return out

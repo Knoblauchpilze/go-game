@@ -1,15 +1,19 @@
 package users
 
 import (
+	"github.com/KnoblauchPilze/go-game/pkg/db"
 	"github.com/KnoblauchPilze/go-game/pkg/errors"
 	"github.com/google/uuid"
 )
 
 type userDbRepo struct {
+	db db.Database
 }
 
 func NewDbRepository() Repository {
-	return &userDbRepo{}
+	return &userDbRepo{
+		db: db.NewPostgresDatabase(),
+	}
 }
 
 func (repo *userDbRepo) Create(user User) (uuid.UUID, error) {
