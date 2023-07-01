@@ -9,6 +9,9 @@ import (
 
 var errSomeError = fmt.Errorf("some error")
 
+// https://forum.golangbridge.org/t/invalid-url-escape-while-parsing-url/8306
+var invalidUrl = "http://test.com/Segment%%2815197306101420000%29.ts"
+
 type mockHttpClient struct {
 	inReq         *http.Request
 	expectedResp  *http.Response

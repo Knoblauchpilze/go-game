@@ -7,7 +7,10 @@ all: setup install
 
 install:
 	@echo "$(COLOR_HIGHLIGHT_BLUE)Building apps...$(COLOR_CLEAR)"
-	cd cmd/cli && make install
+	@cd cmd/create-user && make install
+	@cd cmd/get-user && make install
+	@cd cmd/patch-user && make install
+	@cd cmd/delete-user && make install
 	@echo "$(COLOR_HIGHLIGHT_GREEN)Success!$(COLOR_CLEAR)"
 
 setup:
@@ -18,7 +21,10 @@ setup:
 clean:
 	@echo "$(COLOR_HIGHLIGHT_BLUE)Cleaning apps...$(COLOR_CLEAR)"
 	@cd bin && ls | grep -v .gitignore | xargs rm -fr
-	@cd cmd/cli && make clean
+	@cd cmd/create-user && make clean
+	@cd cmd/get-user && make clean
+	@cd cmd/patch-user && make clean
+	@cd cmd/delete-user && make clean
 	@echo "$(COLOR_HIGHLIGHT_GREEN)Success!$(COLOR_CLEAR)"
 
 # https://stackoverflow.com/questions/3931741/why-does-make-think-the-target-is-up-to-date

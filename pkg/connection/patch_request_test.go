@@ -6,11 +6,11 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func TestHttpPostRequestTestSuite(t *testing.T) {
+func TestHttpPatchRequestTestSuite(t *testing.T) {
 	suite.Run(t, &RequestWithVerbTestSuite{
 		verbAcceptsBody: true,
 		createRequest: func() *RequestBuilder {
-			return NewHttpPostRequestBuilder()
+			return NewHttpPatchRequestBuilder()
 		},
 	})
 }
