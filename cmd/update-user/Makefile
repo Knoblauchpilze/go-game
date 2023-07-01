@@ -1,6 +1,6 @@
 # Default variables
 INSTALL_FOLDER ?= ../../bin
-APPLICATION ?= server
+APPLICATION ?= update-user
 
 BRANCH ?= master
 TAG ?= ${BRANCH}
@@ -12,10 +12,10 @@ setup:
 	mkdir -p build
 
 release: setup
-	go build -o build/server main.go
+	go build -o build/update-user main.go
 
 clean:
 	rm -rf build
 
 run: install
-	./build/server
+	./build/update-user
