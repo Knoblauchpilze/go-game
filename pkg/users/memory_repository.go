@@ -30,13 +30,6 @@ func (repo *userMemoryRepo) Create(user User) (uuid.UUID, error) {
 		return uuid.UUID{}, errors.NewCode(errors.ErrUserAlreadyExists)
 	}
 
-	if _, err := uuid.Parse(user.Id.String()); err != nil {
-		user.Id, err = uuid.NewUUID()
-		if err != nil {
-			return uuid.UUID{}, errors.WrapCode(err, errors.ErrUserCreationFailure)
-		}
-	}
-
 	repo.users[user.Id] = user
 
 	return user.Id, nil

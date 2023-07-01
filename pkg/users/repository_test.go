@@ -57,19 +57,6 @@ func (suite *UsersRepositoryTestSuite) TestCreateUser() {
 	assert.Equal(defaultTestUser.Id, id)
 }
 
-func (suite *UsersRepositoryTestSuite) TestCreateUser_IdGenerated() {
-	assert := assert.New(suite.T())
-
-	repo := suite.createRepo()
-	user := User{Mail: "some@mail", Name: "someName", Password: "somePassword"}
-	id, err := repo.Create(user)
-	assert.Nil(err)
-
-	check, err := uuid.Parse(id.String())
-	assert.Nil(err)
-	assert.Equal(id, check)
-}
-
 func (suite *UsersRepositoryTestSuite) TestCreateUser_Duplicated() {
 	assert := assert.New(suite.T())
 
@@ -149,6 +136,19 @@ func (suite *UsersRepositoryTestSuite) TestPatchUser_Empty() {
 	assert.Equal(defaultTestUser.Mail, patched.Mail)
 	assert.Equal(defaultTestUser.Name, patched.Name)
 	assert.Equal(defaultTestUser.Password, patched.Password)
+}
+
+func (suite *UsersRepositoryTestSuite) TestPatchUser_WrongId() {
+	assert := assert.New(suite.T())
+
+	repo := suite.createRepo()
+	repo.Create(defaultTestUser)
+
+	wrongId := uuid.New()
+	assert.NotEqual(defaultTestUser.Id, wrongId)
+	patch := User{}
+	_, err := repo.Patch(wrongId, patch)
+	assert.True(errors.IsErrorWithCode(err, errors.ErrNoSuchUser))
 }
 
 func (suite *UsersRepositoryTestSuite) TestPatchUser_Mail() {
