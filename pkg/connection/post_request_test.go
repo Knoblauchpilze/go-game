@@ -24,6 +24,23 @@ func TestHttpPostRequest_UrlReached(t *testing.T) {
 	assert.Equal(url, mc.inReq.URL.String())
 }
 
+func TestHttpPostRequest_InvalidUrl(t *testing.T) {
+	assert := assert.New(t)
+
+	mc := &mockHttpClient{}
+	url := "http://test.com/Segment%%2815197306101420000%29.ts"
+
+	rb := NewHttpPostRequestBuilder()
+	rb.SetUrl(url)
+	rb.setHttpClient(mc)
+	rw, err := rb.Build()
+	assert.Nil(err)
+
+	_, err = rw.Perform()
+	assert.NotNil(err)
+	assert.Nil(mc.inReq)
+}
+
 func TestHttpPostRequest_HeadersPassed(t *testing.T) {
 	assert := assert.New(t)
 
