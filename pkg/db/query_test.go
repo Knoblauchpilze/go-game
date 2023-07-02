@@ -24,4 +24,7 @@ func TestQuery_ToSql(t *testing.T) {
 
 	q.sqlCode = "someSqlCode"
 	assert.Equal("someSqlCode", q.ToSql())
+
+	q.verbose = true
+	assert.Equal("someSqlCode", q.ToSql())
 }
