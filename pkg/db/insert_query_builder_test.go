@@ -162,7 +162,6 @@ func TestScriptQueryBuilder_Build_Unmarshallable(t *testing.T) {
 	_, err := b.Build()
 	assert.True(errors.IsErrorWithCode(err, errors.ErrSqlTranslationFailed))
 	cause := errors.Unwrap(err)
-	fmt.Printf("err: %+v\n", cause)
 	assert.True(strings.Contains(cause.Error(), "someError"))
 }
 

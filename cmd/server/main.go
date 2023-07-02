@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/KnoblauchPilze/go-game/cmd/server/routes"
+	"github.com/KnoblauchPilze/go-game/pkg/db"
 	"github.com/KnoblauchPilze/go-game/pkg/logger"
 	"github.com/KnoblauchPilze/go-game/pkg/users"
 	"github.com/go-chi/chi/v5"
@@ -37,7 +38,16 @@ func main() {
 	r.Use(middleware.Recoverer)
 
 	// repo := users.NewMemoryRepository()
-	repo := users.NewDbRepository()
+	dbConf := db.NewConfig()
+	dbConf.DbHost = "localhost"
+	dbConf.DbPort = uint16(5500)
+	dbConf.DbName = "user_service_db"
+	dbConf.DbUser = "user_service_administrator"
+	dbConf.DbPassword = "Ww76hQWbbt7zi2ItM6cNo4YYT"
+	dbConf.DbConnectionsPoolSize = 2
+
+	db := db.NewPostgresDatabase(dbConf)
+	repo := users.NewDbRepository(db)
 
 	r.Mount("/users", routes.UsersRouter(repo))
 

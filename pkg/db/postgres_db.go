@@ -2,45 +2,71 @@ package db
 
 import (
 	"sync"
-	"time"
 
 	"github.com/KnoblauchPilze/go-game/pkg/errors"
 	"github.com/KnoblauchPilze/go-game/pkg/logger"
 	"github.com/jackc/pgx"
 )
 
-const dbHost = "localhost"
-const dbPort = uint16(5500)
-const dbName = "user_service_db"
-const dbUser = "user_service_administrator"
-const dbPassword = "Ww76hQWbbt7zi2ItM6cNo4YYT"
-
-const dbConnectionsPoolSize = 1
-const dbHealthcheckInterval = 5 * time.Second
-
 // https://www.sohamkamani.com/golang/sql-database/
 // https://betterprogramming.pub/how-to-work-with-sql-in-go-ca8bc0b30722
 type postgresDb struct {
-	pool *pgx.ConnPool
-	lock sync.Mutex
+	config Config
+	pool   pgxDbFacade
+	lock   sync.Mutex
 }
 
-func NewPostgresDatabase() Database {
+func NewPostgresDatabase(conf Config) Database {
 	db := postgresDb{
-		nil,
-		sync.Mutex{},
+		config: conf,
 	}
 
-	db.createPoolAttempt()
+	return &db
+}
 
-	ticker := time.NewTicker(dbHealthcheckInterval)
-	go func() {
-		for range ticker.C {
-			db.healthcheck()
-		}
+func (db *postgresDb) Connect() error {
+	logger.Infof("connection attempt to %s", db.config)
+
+	pgxConf := pgx.ConnPoolConfig{
+		ConnConfig: pgx.ConnConfig{
+			Host:     db.config.DbHost,
+			Database: db.config.DbName,
+			Port:     db.config.DbPort,
+			User:     db.config.DbUser,
+			Password: db.config.DbPassword,
+		},
+		MaxConnections: int(db.config.DbConnectionsPoolSize),
+		AcquireTimeout: 0,
+	}
+
+	pool, err := db.config.creationFunc(pgxConf)
+	if err != nil {
+		return errors.WrapCode(err, errors.ErrDbConnectionFailed)
+	}
+
+	logger.Infof("connected to %s", db.config)
+
+	db.lock.Lock()
+	func() {
+		defer db.lock.Unlock()
+		db.pool = pool
 	}()
 
-	return &db
+	return nil
+}
+
+func (db *postgresDb) Disconnect() error {
+	db.lock.Lock()
+	defer db.lock.Unlock()
+
+	if db.pool == nil {
+		return nil
+	}
+
+	db.pool.Close()
+	db.pool = nil
+
+	return nil
 }
 
 func (db *postgresDb) Query(query Query) QueryRows {
@@ -95,56 +121,4 @@ func (db *postgresDb) Execute(query Query) Result {
 	out.tag, out.Err = db.pool.Exec(sqlQuery)
 
 	return out
-}
-
-func (db *postgresDb) createPoolAttempt() bool {
-	logger.Infof("connection attempt to %v at %v:%v, user %v", dbName, dbHost, dbPort, dbUser)
-
-	pool, err := pgx.NewConnPool(pgx.ConnPoolConfig{
-		ConnConfig: pgx.ConnConfig{
-			Host:     dbHost,
-			Database: dbName,
-			Port:     dbPort,
-			User:     dbUser,
-			Password: dbPassword,
-		},
-		MaxConnections: dbConnectionsPoolSize,
-		AcquireTimeout: 0,
-	})
-
-	if err != nil {
-		logger.Warnf("failed to connect to %v at %v:%v (err: %v)", dbName, dbHost, dbPort, err)
-		return false
-	}
-
-	logger.Infof("connected to %v at %v:%v", dbName, dbHost, dbPort)
-
-	db.lock.Lock()
-	func() {
-		defer db.lock.Unlock()
-		db.pool = pool
-	}()
-
-	return true
-}
-
-func (db *postgresDb) healthcheck() {
-	dbIsNil := false
-	var stat pgx.ConnPoolStat
-
-	db.lock.Lock()
-	func() {
-		defer db.lock.Unlock()
-
-		dbIsNil = (db.pool == nil)
-		if !dbIsNil {
-			stat = db.pool.Stat()
-		}
-	}()
-
-	logger.Debugf("stats: %+v", stat)
-
-	if dbIsNil || stat.CurrentConnections == 0 {
-		db.createPoolAttempt()
-	}
 }

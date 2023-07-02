@@ -30,6 +30,7 @@ const (
 	ErrPostRequestFailed
 	ErrGetRequestFailed
 
+	ErrDbConnectionFailed
 	ErrDbConnectionInvalid
 	ErrInvalidQuery
 	ErrInvalidSqlTable
@@ -80,6 +81,7 @@ var errorsCodeToMessage = map[ErrorCode]string{
 	ErrPostRequestFailed: "post request failed",
 	ErrGetRequestFailed:  "get request failed",
 
+	ErrDbConnectionFailed:        "db connection failed",
 	ErrDbConnectionInvalid:       "db connection is invalid",
 	ErrInvalidQuery:              "invalid sql query",
 	ErrInvalidSqlTable:           "invalid table for sql query",
