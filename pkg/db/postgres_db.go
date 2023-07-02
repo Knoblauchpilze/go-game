@@ -18,8 +18,8 @@ const dbPassword = "Ww76hQWbbt7zi2ItM6cNo4YYT"
 const dbConnectionsPoolSize = 1
 const dbHealthcheckInterval = 5 * time.Second
 
-// https://betterprogramming.pub/how-to-work-with-sql-in-go-ca8bc0b30722
 // https://www.sohamkamani.com/golang/sql-database/
+// https://betterprogramming.pub/how-to-work-with-sql-in-go-ca8bc0b30722
 type postgresDb struct {
 	pool *pgx.ConnPool
 	lock sync.Mutex
@@ -55,10 +55,7 @@ func (db *postgresDb) Query(query Query) (Rows, error) {
 		return Rows{}, errors.NewCode(errors.ErrInvalidQuery)
 	}
 
-	sqlQuery, err := query.ToSql()
-	if err != nil {
-		return Rows{}, errors.NewCode(errors.ErrSqlTranslation)
-	}
+	sqlQuery := query.ToSql()
 
 	if query.Verbose() {
 		logger.Tracef("executing query: %s", sqlQuery)
@@ -82,10 +79,7 @@ func (db *postgresDb) Execute(query Query) (Result, error) {
 		return Result{}, errors.NewCode(errors.ErrInvalidQuery)
 	}
 
-	sqlQuery, err := query.ToSql()
-	if err != nil {
-		return Result{}, errors.NewCode(errors.ErrSqlTranslation)
-	}
+	sqlQuery := query.ToSql()
 
 	if query.Verbose() {
 		logger.Tracef("executing script: %s", sqlQuery)
