@@ -1,19 +1,40 @@
 package db
 
 import (
+	"fmt"
+	"net"
 	"testing"
 
+	"github.com/jackc/pgx"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPostgresDatabase_New(t *testing.T) {
+func TestConfig_New(t *testing.T) {
 	assert := assert.New(t)
 
 	conf := NewConfig()
 	assert.NotNil(conf.creationFunc)
 }
 
-func TestPostgresDatabase_Valid(t *testing.T) {
+func TestConfig_Create(t *testing.T) {
+	assert := assert.New(t)
+
+	conf := NewConfig()
+
+	pgxConf := pgx.ConnPoolConfig{
+		ConnConfig: pgx.ConnConfig{
+			Host: "host",
+			Dial: func(network, addr string) (net.Conn, error) {
+				return nil, fmt.Errorf("someError")
+			},
+		},
+	}
+
+	_, err := conf.creationFunc(pgxConf)
+	assert.Equal("someError", err.Error())
+}
+
+func TestConfig_Valid(t *testing.T) {
 	assert := assert.New(t)
 
 	conf := Config{}
@@ -38,7 +59,7 @@ func TestPostgresDatabase_Valid(t *testing.T) {
 	assert.True(conf.Valid())
 }
 
-func TestPostgresDatabase_String(t *testing.T) {
+func TestConfig_String(t *testing.T) {
 	assert := assert.New(t)
 
 	conf := Config{

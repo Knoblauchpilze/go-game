@@ -47,6 +47,7 @@ const (
 
 	ErrDbCorruptedData
 	ErrDbRequestCreationFailed
+	ErrDbRequestFailed
 	ErrMultiValuedDbElement
 
 	ErrNotImplemented
@@ -97,7 +98,8 @@ var errorsCodeToMessage = map[ErrorCode]string{
 	ErrNoValuesInSqlComparison:   "no comparison values set for sql query",
 
 	ErrDbCorruptedData:         "failed to interpret data from database",
-	ErrDbRequestCreationFailed: "failed to create db request",
+	ErrDbRequestCreationFailed: "failed to create database request",
+	ErrDbRequestFailed:         "failed to query data from database",
 	ErrMultiValuedDbElement:    "multiple values for expected unique database entry",
 
 	ErrNotImplemented: "not implemented",

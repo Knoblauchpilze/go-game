@@ -73,7 +73,7 @@ func (db *postgresDb) Query(query Query) QueryRows {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 
-	out := &queryRowsImpl{}
+	out := queryRowsImpl{}
 
 	if db.pool == nil {
 		out.err = errors.NewCode(errors.ErrDbConnectionInvalid)
@@ -87,7 +87,11 @@ func (db *postgresDb) Query(query Query) QueryRows {
 
 	sqlQuery := query.ToSql()
 
-	out.rows, out.err = db.pool.Query(sqlQuery)
+	var err error
+	out.rows, err = db.pool.Query(sqlQuery)
+	if err != nil {
+		out.err = errors.WrapCode(err, errors.ErrDbRequestFailed)
+	}
 
 	return out
 }
@@ -110,7 +114,11 @@ func (db *postgresDb) Execute(query Query) Result {
 
 	sqlQuery := query.ToSql()
 
-	out.tag, out.Err = db.pool.Exec(sqlQuery)
+	var err error
+	out.tag, err = db.pool.Exec(sqlQuery)
+	if err != nil {
+		out.Err = errors.WrapCode(err, errors.ErrDbRequestFailed)
+	}
 
 	return out
 }
