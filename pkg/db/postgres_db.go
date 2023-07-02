@@ -87,10 +87,6 @@ func (db *postgresDb) Query(query Query) QueryRows {
 
 	sqlQuery := query.ToSql()
 
-	if query.Verbose() {
-		logger.Tracef("executing query: %s", sqlQuery)
-	}
-
 	out.rows, out.err = db.pool.Query(sqlQuery)
 
 	return out
@@ -113,10 +109,6 @@ func (db *postgresDb) Execute(query Query) Result {
 	}
 
 	sqlQuery := query.ToSql()
-
-	if query.Verbose() {
-		logger.Tracef("executing script: %s", sqlQuery)
-	}
 
 	out.tag, out.Err = db.pool.Exec(sqlQuery)
 

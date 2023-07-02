@@ -76,14 +76,12 @@ func TestSelectQueryBuilder_SetVerbose(t *testing.T) {
 
 	b.SetTable("table")
 	b.AddProp("prop")
-	query, err := b.Build()
+	_, err := b.Build()
 	assert.Nil(err)
-	assert.False(query.Verbose())
 
 	b.SetVerbose(true)
-	query, err = b.Build()
+	_, err = b.Build()
 	assert.Nil(err)
-	assert.True(query.Verbose())
 }
 
 func TestSelectQueryBuilder_Build_NoTable(t *testing.T) {
@@ -119,7 +117,6 @@ func TestSelectQueryBuilder_Build(t *testing.T) {
 	query, err := b.Build()
 	assert.Nil(err)
 	assert.True(query.Valid())
-	assert.False(query.Verbose())
 	assert.Equal("SELECT prop FROM table", query.ToSql())
 }
 
@@ -134,7 +131,6 @@ func TestSelectQueryBuilder_Build_MultiArgs(t *testing.T) {
 	query, err := b.Build()
 	assert.Nil(err)
 	assert.True(query.Valid())
-	assert.False(query.Verbose())
 	assert.Equal("SELECT prop1, prop2 FROM table", query.ToSql())
 }
 
@@ -152,6 +148,5 @@ func TestSelectQueryBuilder_Build_WithFilter(t *testing.T) {
 	query, err := b.Build()
 	assert.Nil(err)
 	assert.True(query.Valid())
-	assert.False(query.Verbose())
 	assert.Equal("SELECT prop1 FROM table WHERE someFilter", query.ToSql())
 }

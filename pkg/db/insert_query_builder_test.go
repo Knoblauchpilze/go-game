@@ -57,14 +57,12 @@ func TestScriptQueryBuilder_SetVerbose(t *testing.T) {
 
 	b.SetScript("script")
 	b.AddArg("arg")
-	query, err := b.Build()
+	_, err := b.Build()
 	assert.Nil(err)
-	assert.False(query.Verbose())
 
 	b.SetVerbose(true)
-	query, err = b.Build()
+	_, err = b.Build()
 	assert.Nil(err)
-	assert.True(query.Verbose())
 }
 
 func TestScriptQueryBuilder_Build_NoScript(t *testing.T) {
@@ -87,7 +85,6 @@ func TestScriptQueryBuilder_Build_NoArg(t *testing.T) {
 	query, err := b.Build()
 	assert.Nil(err)
 	assert.True(query.Valid())
-	assert.False(query.Verbose())
 	assert.Equal("SELECT script()", query.ToSql())
 }
 
@@ -101,7 +98,6 @@ func TestScriptQueryBuilder_Build_StringArg(t *testing.T) {
 	query, err := b.Build()
 	assert.Nil(err)
 	assert.True(query.Valid())
-	assert.False(query.Verbose())
 	assert.Equal("SELECT script('arg')", query.ToSql())
 }
 
@@ -123,7 +119,6 @@ func TestScriptQueryBuilder_Build_ConvertibleArg(t *testing.T) {
 	query, err := b.Build()
 	assert.Nil(err)
 	assert.True(query.Valid())
-	assert.False(query.Verbose())
 	assert.Equal("SELECT script('32')", query.ToSql())
 }
 
@@ -142,7 +137,6 @@ func TestScriptQueryBuilder_Build_ComplexArg(t *testing.T) {
 	query, err := b.Build()
 	assert.Nil(err)
 	assert.True(query.Valid())
-	assert.False(query.Verbose())
 	assert.Equal("SELECT script('{\"Value\":26,\"Name\":\"someName\"}')", query.ToSql())
 }
 
@@ -195,6 +189,5 @@ func TestScriptQueryBuilder_Build_MultiArgs(t *testing.T) {
 	query, err := b.Build()
 	assert.Nil(err)
 	assert.True(query.Valid())
-	assert.False(query.Verbose())
 	assert.Equal("SELECT script('arg1', 'arg2')", query.ToSql())
 }
