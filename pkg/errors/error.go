@@ -47,18 +47,18 @@ func Newf(format string, args ...interface{}) error {
 	}
 }
 
-func Wrap(err error, message string) error {
+func Wrap(cause error, message string) error {
 	return errorImpl{
 		Message: message,
-		Cause:   err,
+		Cause:   cause,
 	}
 }
 
-func WrapCode(err error, code ErrorCode) error {
+func WrapCode(cause error, code ErrorCode) error {
 	e := errorImpl{
 		hasCode: true,
 		Value:   code,
-		Cause:   err,
+		Cause:   cause,
 	}
 
 	if msg, ok := errorsCodeToMessage[code]; ok {
@@ -70,10 +70,10 @@ func WrapCode(err error, code ErrorCode) error {
 	return e
 }
 
-func Wrapf(err error, format string, args ...interface{}) error {
+func Wrapf(cause error, format string, args ...interface{}) error {
 	return errorImpl{
 		Message: fmt.Sprintf(format, args...),
-		Cause:   err,
+		Cause:   cause,
 	}
 }
 

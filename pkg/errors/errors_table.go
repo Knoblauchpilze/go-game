@@ -38,6 +38,7 @@ const (
 	ErrInvalidSqlScript
 	ErrInvalidSqlScriptArg
 	ErrSqlTranslationFailed
+	ErrNoPropInSqlSelectQuery
 
 	ErrNotImplemented
 
@@ -71,14 +72,15 @@ var errorsCodeToMessage = map[ErrorCode]string{
 	ErrPostRequestFailed: "post request failed",
 	ErrGetRequestFailed:  "get request failed",
 
-	ErrDbConnectionInvalid:  "db connection is invalid",
-	ErrInvalidQuery:         "invalid sql query",
-	ErrInvalidSqlTable:      "invalid table for sql query",
-	ErrInvalidSqlProp:       "invalid property for sql query",
-	ErrDuplicatedSqlProp:    "duplicated property for sql query",
-	ErrInvalidSqlScript:     "invalid script for sql query",
-	ErrInvalidSqlScriptArg:  "invalid script argument for sql query",
-	ErrSqlTranslationFailed: "failed to generate sql query",
+	ErrDbConnectionInvalid:    "db connection is invalid",
+	ErrInvalidQuery:           "invalid sql query",
+	ErrInvalidSqlTable:        "invalid table for sql query",
+	ErrInvalidSqlProp:         "invalid property for sql query",
+	ErrDuplicatedSqlProp:      "duplicated property for sql query",
+	ErrInvalidSqlScript:       "invalid script for sql query",
+	ErrInvalidSqlScriptArg:    "invalid script argument for sql query",
+	ErrSqlTranslationFailed:   "failed to generate sql query",
+	ErrNoPropInSqlSelectQuery: "no property set for sql query",
 
 	ErrNotImplemented: "not implemented",
 }

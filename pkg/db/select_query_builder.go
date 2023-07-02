@@ -54,6 +54,13 @@ func (b *selectQueryBuilder) SetVerbose(verbose bool) {
 }
 
 func (b *selectQueryBuilder) Build() (Query, error) {
+	if len(b.table) == 0 {
+		return queryImpl{}, errors.WrapCode(errors.NewCode(errors.ErrInvalidSqlTable), errors.ErrSqlTranslationFailed)
+	}
+	if len(b.props) == 0 {
+		return queryImpl{}, errors.WrapCode(errors.NewCode(errors.ErrNoPropInSqlSelectQuery), errors.ErrSqlTranslationFailed)
+	}
+
 	propsAsStr := b.propsToStr()
 	sqlQuery := fmt.Sprintf("SELECT %s FROM %s", propsAsStr, b.table)
 

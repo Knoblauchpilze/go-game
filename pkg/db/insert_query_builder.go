@@ -33,12 +33,12 @@ func NewScriptQueryBuilder() ScriptQueryBuilder {
 }
 
 func (b *scriptQueryBuilder) SetHasReturnValue(hasReturnValue bool) {
-	b.hasReturnValue = !hasReturnValue
+	b.hasReturnValue = hasReturnValue
 }
 
 func (b *scriptQueryBuilder) SetScript(script string) error {
 	if len(script) == 0 {
-		return errors.NewCode(errors.ErrInvalidSqlTable)
+		return errors.NewCode(errors.ErrInvalidSqlScript)
 	}
 
 	b.script = script
@@ -60,6 +60,10 @@ func (b *scriptQueryBuilder) SetVerbose(verbose bool) {
 }
 
 func (b *scriptQueryBuilder) Build() (Query, error) {
+	if len(b.script) == 0 {
+		return queryImpl{}, errors.WrapCode(errors.NewCode(errors.ErrInvalidSqlScript), errors.ErrSqlTranslationFailed)
+	}
+
 	argsAsStr, err := b.argsToStr()
 	if err != nil {
 		return queryImpl{}, errors.WrapCode(err, errors.ErrSqlTranslationFailed)
