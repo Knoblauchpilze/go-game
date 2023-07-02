@@ -2,21 +2,32 @@ package db
 
 import "github.com/jackc/pgx"
 
-type Rows struct {
+type QueryRows interface {
+	Next() bool
+	Scan(dest ...interface{}) error
+	Err() error
+	Close()
+}
+
+type queryRowsImpl struct {
 	rows *pgx.Rows
-	Err  error
+	err  error
 }
 
-func (r Rows) Next() bool {
-	return r.rows.Next()
+func (qr *queryRowsImpl) Next() bool {
+	return qr.rows.Next()
 }
 
-func (r Rows) Scan(dest ...interface{}) error {
-	return r.rows.Scan(dest...)
+func (qr *queryRowsImpl) Scan(dest ...interface{}) error {
+	return qr.rows.Scan(dest...)
 }
 
-func (r Rows) Close() {
-	if r.rows != nil {
-		r.rows.Close()
+func (qr *queryRowsImpl) Err() error {
+	return qr.err
+}
+
+func (qr queryRowsImpl) Close() {
+	if qr.rows != nil {
+		qr.rows.Close()
 	}
 }

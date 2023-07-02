@@ -43,16 +43,20 @@ func NewPostgresDatabase() Database {
 	return &db
 }
 
-func (db *postgresDb) Query(query Query) (Rows, error) {
+func (db *postgresDb) Query(query Query) QueryRows {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 
+	out := &queryRowsImpl{}
+
 	if db.pool == nil {
-		return Rows{}, errors.NewCode(errors.ErrDbConnectionInvalid)
+		out.err = errors.NewCode(errors.ErrDbConnectionInvalid)
+		return out
 	}
 
 	if !query.Valid() {
-		return Rows{}, errors.NewCode(errors.ErrInvalidQuery)
+		out.err = errors.NewCode(errors.ErrInvalidQuery)
+		return out
 	}
 
 	sqlQuery := query.ToSql()
@@ -61,22 +65,25 @@ func (db *postgresDb) Query(query Query) (Rows, error) {
 		logger.Tracef("executing query: %s", sqlQuery)
 	}
 
-	var out Rows
-	out.rows, out.Err = db.pool.Query(sqlQuery)
+	out.rows, out.err = db.pool.Query(sqlQuery)
 
-	return out, nil
+	return out
 }
 
-func (db *postgresDb) Execute(query Query) (Result, error) {
+func (db *postgresDb) Execute(query Query) Result {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 
+	var out Result
+
 	if db.pool == nil {
-		return Result{}, errors.NewCode(errors.ErrDbConnectionInvalid)
+		out.Err = errors.NewCode(errors.ErrDbConnectionInvalid)
+		return out
 	}
 
 	if !query.Valid() {
-		return Result{}, errors.NewCode(errors.ErrInvalidQuery)
+		out.Err = errors.NewCode(errors.ErrInvalidQuery)
+		return out
 	}
 
 	sqlQuery := query.ToSql()
@@ -85,10 +92,9 @@ func (db *postgresDb) Execute(query Query) (Result, error) {
 		logger.Tracef("executing script: %s", sqlQuery)
 	}
 
-	var out Result
 	out.tag, out.Err = db.pool.Exec(sqlQuery)
 
-	return out, nil
+	return out
 }
 
 func (db *postgresDb) createPoolAttempt() bool {

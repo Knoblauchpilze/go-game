@@ -2,6 +2,6 @@ package db
 
 // See here:
 type Database interface {
-	Query(query Query) (Rows, error)
-	Execute(query Query) (Result, error)
+	Query(query Query) QueryRows
+	Execute(query Query) Result
 }

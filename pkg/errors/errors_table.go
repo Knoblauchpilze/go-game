@@ -35,10 +35,18 @@ const (
 	ErrInvalidSqlTable
 	ErrInvalidSqlProp
 	ErrDuplicatedSqlProp
+	ErrInvalidSqlFilter
 	ErrInvalidSqlScript
 	ErrInvalidSqlScriptArg
 	ErrSqlTranslationFailed
 	ErrNoPropInSqlSelectQuery
+	ErrInvalidSqlComparisonKey
+	ErrInvalidSqlComparisonValue
+	ErrNoValuesInSqlComparison
+
+	ErrDbCorruptedData
+	ErrDbRequestCreationFailed
+	ErrMultiValuedDbElement
 
 	ErrNotImplemented
 
@@ -72,15 +80,23 @@ var errorsCodeToMessage = map[ErrorCode]string{
 	ErrPostRequestFailed: "post request failed",
 	ErrGetRequestFailed:  "get request failed",
 
-	ErrDbConnectionInvalid:    "db connection is invalid",
-	ErrInvalidQuery:           "invalid sql query",
-	ErrInvalidSqlTable:        "invalid table for sql query",
-	ErrInvalidSqlProp:         "invalid property for sql query",
-	ErrDuplicatedSqlProp:      "duplicated property for sql query",
-	ErrInvalidSqlScript:       "invalid script for sql query",
-	ErrInvalidSqlScriptArg:    "invalid script argument for sql query",
-	ErrSqlTranslationFailed:   "failed to generate sql query",
-	ErrNoPropInSqlSelectQuery: "no property set for sql query",
+	ErrDbConnectionInvalid:       "db connection is invalid",
+	ErrInvalidQuery:              "invalid sql query",
+	ErrInvalidSqlTable:           "invalid table for sql query",
+	ErrInvalidSqlProp:            "invalid property for sql query",
+	ErrDuplicatedSqlProp:         "duplicated property for sql query",
+	ErrInvalidSqlFilter:          "invalid filter for sql query",
+	ErrInvalidSqlScript:          "invalid script for sql query",
+	ErrInvalidSqlScriptArg:       "invalid script argument for sql query",
+	ErrSqlTranslationFailed:      "failed to generate sql query",
+	ErrNoPropInSqlSelectQuery:    "no property set for sql query",
+	ErrInvalidSqlComparisonKey:   "invalid comparison key for sql query",
+	ErrInvalidSqlComparisonValue: "invalid comparison value for sql query",
+	ErrNoValuesInSqlComparison:   "no comparison values set for sql query",
+
+	ErrDbCorruptedData:         "failed to interpret data from database",
+	ErrDbRequestCreationFailed: "failed to create db request",
+	ErrMultiValuedDbElement:    "multiple values for expected unique database entry",
 
 	ErrNotImplemented: "not implemented",
 }

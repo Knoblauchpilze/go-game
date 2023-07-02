@@ -12,18 +12,22 @@ type SelectQueryBuilder interface {
 
 	SetTable(table string) error
 	AddProp(prop string) error
+	SetFilter(filter Filter) error
 	SetVerbose(verbose bool)
 }
 
 type selectQueryBuilder struct {
+	action  string
 	props   map[string]bool
 	table   string
+	filter  Filter
 	verbose bool
 }
 
 func NewSelectQueryBuilder() SelectQueryBuilder {
 	return &selectQueryBuilder{
-		props: make(map[string]bool),
+		action: "SELECT",
+		props:  make(map[string]bool),
 	}
 }
 
@@ -49,6 +53,15 @@ func (b *selectQueryBuilder) AddProp(prop string) error {
 	return nil
 }
 
+func (b *selectQueryBuilder) SetFilter(filter Filter) error {
+	if !filter.Valid() {
+		return errors.NewCode(errors.ErrInvalidSqlFilter)
+	}
+
+	b.filter = filter
+	return nil
+}
+
 func (b *selectQueryBuilder) SetVerbose(verbose bool) {
 	b.verbose = verbose
 }
@@ -62,7 +75,10 @@ func (b *selectQueryBuilder) Build() (Query, error) {
 	}
 
 	propsAsStr := b.propsToStr()
-	sqlQuery := fmt.Sprintf("SELECT %s FROM %s", propsAsStr, b.table)
+	sqlQuery := fmt.Sprintf("%s %s FROM %s", b.action, propsAsStr, b.table)
+	if b.filter != nil {
+		sqlQuery += fmt.Sprintf(" WHERE %s", b.filter.ToSql())
+	}
 
 	query := queryImpl{
 		sqlCode: sqlQuery,

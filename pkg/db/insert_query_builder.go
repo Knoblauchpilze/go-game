@@ -85,7 +85,7 @@ func (b *scriptQueryBuilder) Build() (Query, error) {
 func (b *scriptQueryBuilder) argsToStr() (string, error) {
 	args := make([]string, 0, len(b.args))
 	for _, arg := range b.args {
-		argStr, err := b.argToStr(arg)
+		argStr, err := argToStr(arg)
 		if err != nil {
 			return "", err
 		}
@@ -96,7 +96,7 @@ func (b *scriptQueryBuilder) argsToStr() (string, error) {
 	return strings.Join(args, ", "), nil
 }
 
-func (b *scriptQueryBuilder) argToStr(arg interface{}) (string, error) {
+func argToStr(arg interface{}) (string, error) {
 	var raw []byte
 	var out string
 	var err error
