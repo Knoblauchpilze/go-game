@@ -49,6 +49,9 @@ const (
 	ErrDbRequestCreationFailed
 	ErrDbRequestFailed
 	ErrMultiValuedDbElement
+	ErrInvalidSqlQueryReceiverType
+	ErrNoRowsReturnedForSqlQuery
+	ErrSqlRowParsingFailed
 
 	ErrNotImplemented
 
@@ -97,10 +100,13 @@ var errorsCodeToMessage = map[ErrorCode]string{
 	ErrInvalidSqlComparisonValue: "invalid comparison value for sql query",
 	ErrNoValuesInSqlComparison:   "no comparison values set for sql query",
 
-	ErrDbCorruptedData:         "failed to interpret data from database",
-	ErrDbRequestCreationFailed: "failed to create database request",
-	ErrDbRequestFailed:         "failed to query data from database",
-	ErrMultiValuedDbElement:    "multiple values for expected unique database entry",
+	ErrDbCorruptedData:             "failed to interpret data from database",
+	ErrDbRequestCreationFailed:     "failed to create database request",
+	ErrDbRequestFailed:             "failed to query data from database",
+	ErrMultiValuedDbElement:        "multiple values for expected unique database entry",
+	ErrInvalidSqlQueryReceiverType: "invalid receiver of a sql query",
+	ErrNoRowsReturnedForSqlQuery:   "sql query returned no rows",
+	ErrSqlRowParsingFailed:         "parsing of sql row failed",
 
 	ErrNotImplemented: "not implemented",
 }

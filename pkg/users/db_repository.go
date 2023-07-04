@@ -14,6 +14,7 @@ const userIdColumnName = "id"
 const userMailColumnName = "mail"
 const userNameColumnName = "name"
 const userPasswordColumnName = "password"
+const userCreatedAtColumnName = "created_at"
 
 func NewDbRepository(db db.Database) Repository {
 	return &userDbRepo{
@@ -35,6 +36,7 @@ func (repo *userDbRepo) Get(id uuid.UUID) (User, error) {
 	qb.AddProp(userMailColumnName)
 	qb.AddProp(userNameColumnName)
 	qb.AddProp(userPasswordColumnName)
+	qb.AddProp(userCreatedAtColumnName)
 
 	qb.SetVerbose(true)
 
@@ -49,16 +51,13 @@ func (repo *userDbRepo) Get(id uuid.UUID) (User, error) {
 	}
 
 	defer result.Close()
-	var idStr string
-	result.Scan(&idStr, &user.Mail, &user.Name, &user.Password)
-	if id, err := uuid.Parse(idStr); err != nil {
-		return user, errors.WrapCode(err, errors.ErrDbCorruptedData)
-	} else {
-		user.Id = id
+
+	scanner := func(row db.Scannable) error {
+		return row.Scan(&user.Id, &user.Mail, &user.Name, &user.Password, &user.CreatedAt)
 	}
 
-	if result.Next() {
-		return user, errors.NewCode(errors.ErrMultiValuedDbElement)
+	if err := result.GetSingleValue(scanner); err != nil {
+		return user, errors.WrapCode(err, errors.ErrDbCorruptedData)
 	}
 
 	return user, nil
@@ -93,14 +92,19 @@ func (repo *userDbRepo) GetAll() ([]uuid.UUID, error) {
 	}
 
 	defer result.Close()
-	for result.Next() {
-		var idStr string
-		result.Scan(&idStr)
-		if id, err := uuid.Parse(idStr); err != nil {
-			return users, errors.WrapCode(err, errors.ErrDbCorruptedData)
-		} else {
-			users = append(users, id)
+
+	scanner := func(row db.Scannable) error {
+		var id uuid.UUID
+		if err := row.Scan(&id); err != nil {
+			return err
 		}
+
+		users = append(users, id)
+		return nil
+	}
+
+	if err := result.GetAll(scanner); err != nil {
+		return users, errors.WrapCode(err, errors.ErrDbCorruptedData)
 	}
 
 	return users, nil
