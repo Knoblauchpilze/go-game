@@ -17,17 +17,18 @@ type SelectQueryBuilder interface {
 }
 
 type selectQueryBuilder struct {
-	action  string
-	props   map[string]bool
-	table   string
-	filter  Filter
-	verbose bool
+	action    string
+	propsKeys map[string]bool
+	props     []string
+	table     string
+	filter    Filter
+	verbose   bool
 }
 
 func NewSelectQueryBuilder() SelectQueryBuilder {
 	return &selectQueryBuilder{
-		action: "SELECT",
-		props:  make(map[string]bool),
+		action:    "SELECT",
+		propsKeys: make(map[string]bool),
 	}
 }
 
@@ -45,11 +46,12 @@ func (b *selectQueryBuilder) AddProp(prop string) error {
 		return errors.NewCode(errors.ErrInvalidSqlProp)
 	}
 
-	if _, ok := b.props[prop]; ok {
+	if _, ok := b.propsKeys[prop]; ok {
 		return errors.NewCode(errors.ErrDuplicatedSqlProp)
 	}
 
-	b.props[prop] = true
+	b.propsKeys[prop] = true
+	b.props = append(b.props, prop)
 	return nil
 }
 
@@ -89,10 +91,5 @@ func (b *selectQueryBuilder) Build() (Query, error) {
 }
 
 func (b *selectQueryBuilder) propsToStr() string {
-	props := make([]string, 0, len(b.props))
-	for prop := range b.props {
-		props = append(props, prop)
-	}
-
-	return strings.Join(props, ", ")
+	return strings.Join(b.props, ", ")
 }
