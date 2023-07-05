@@ -106,6 +106,23 @@ func TestRows_GetSingleValue(t *testing.T) {
 	assert.Equal(1, calls)
 }
 
+func TestRows_GetSingleValue_CallsClose(t *testing.T) {
+	assert := assert.New(t)
+
+	calls := 0
+	scan := func(row Scannable) error {
+		calls++
+		return nil
+	}
+
+	m := &mockRows{
+		numberOfRows: 1,
+	}
+	r := newRows(m, nil)
+	r.GetSingleValue(scan)
+	assert.Equal(1, m.closeCalls)
+}
+
 func TestRows_GetSingleValue_ScannerError(t *testing.T) {
 	assert := assert.New(t)
 
@@ -181,6 +198,23 @@ func TestRows_GetAll(t *testing.T) {
 	assert.Equal(2, calls)
 }
 
+func TestRows_GetAll_CallsClose(t *testing.T) {
+	assert := assert.New(t)
+
+	calls := 0
+	scan := func(row Scannable) error {
+		calls++
+		return nil
+	}
+
+	m := &mockRows{
+		numberOfRows: 2,
+	}
+	r := newRows(m, nil)
+	r.GetAll(scan)
+	assert.Equal(1, m.closeCalls)
+}
+
 func TestRows_GetAll_ScannerError(t *testing.T) {
 	assert := assert.New(t)
 
@@ -200,8 +234,3 @@ func TestRows_GetAll_ScannerError(t *testing.T) {
 	assert.Equal("someError", cause.Error())
 	assert.Equal(1, calls)
 }
-
-// type Rows interface {
-
-// 	GetAll(outSlice interface{}) error
-// }

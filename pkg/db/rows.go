@@ -5,13 +5,6 @@ import (
 	"github.com/KnoblauchPilze/go-game/pkg/errors"
 )
 
-type Scannable interface {
-	Scan(dest ...interface{}) error
-}
-
-type ScanRow func(row Scannable) error
-
-// https://github.com/jackc/pgx/issues/878
 type Rows interface {
 	Err() error
 	Close()
@@ -20,6 +13,12 @@ type Rows interface {
 	GetSingleValue(scanner ScanRow) error
 	GetAll(scanner ScanRow) error
 }
+
+type Scannable interface {
+	Scan(dest ...interface{}) error
+}
+
+type ScanRow func(row Scannable) error
 
 type sqlRows interface {
 	Next() bool
@@ -65,6 +64,8 @@ func (r *rowsImpl) GetSingleValue(scanner ScanRow) error {
 		return err
 	}
 
+	defer r.Close()
+
 	if err := scanner(r.rows); err != nil {
 		return errors.WrapCode(err, errors.ErrSqlRowParsingFailed)
 	}
@@ -81,6 +82,8 @@ func (r *rowsImpl) GetAll(scanner ScanRow) error {
 	if err := r.assertValidStateOrReturnError(); err != nil {
 		return err
 	}
+
+	defer r.Close()
 
 	for r.next {
 		if err := scanner(r.rows); err != nil {
@@ -103,11 +106,3 @@ func (r *rowsImpl) assertValidStateOrReturnError() error {
 
 	return nil
 }
-
-// func (qr queryRowsImpl) Next() bool {
-// 	return qr.rows != nil && qr.rows.Next()
-// }
-
-// func (qr queryRowsImpl) Scan(dest ...interface{}) error {
-// 	return qr.rows.Scan(dest...)
-// }
