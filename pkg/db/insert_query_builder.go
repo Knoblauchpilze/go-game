@@ -78,6 +78,7 @@ func (b *insertQueryBuilder) Build() (Query, error) {
 		return queryImpl{}, errors.WrapCode(err, errors.ErrSqlTranslationFailed)
 	}
 
+	// https://www.w3schools.com/sql/sql_insert.asp
 	sqlQuery := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", b.table, columnsAsStr, valuesAsStr)
 
 	query := queryImpl{
