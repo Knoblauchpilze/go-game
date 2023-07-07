@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -88,7 +87,7 @@ func TestScriptQueryBuilder_Build_NoArg(t *testing.T) {
 	assert.Equal("SELECT script()", query.ToSql())
 }
 
-func TestScriptQueryBuilder_Build_StringArg(t *testing.T) {
+func TestScriptQueryBuilder_Build_SingleArg(t *testing.T) {
 	assert := assert.New(t)
 
 	b := NewScriptQueryBuilder()
@@ -99,83 +98,6 @@ func TestScriptQueryBuilder_Build_StringArg(t *testing.T) {
 	assert.Nil(err)
 	assert.True(query.Valid())
 	assert.Equal("SELECT script('arg')", query.ToSql())
-}
-
-type mockConvertible struct {
-	value int
-}
-
-func (mc mockConvertible) Convert() interface{} {
-	return mc.value
-}
-
-func TestScriptQueryBuilder_Build_ConvertibleArg(t *testing.T) {
-	assert := assert.New(t)
-
-	b := NewScriptQueryBuilder()
-	b.SetScript("script")
-	b.AddArg(mockConvertible{value: 32})
-
-	query, err := b.Build()
-	assert.Nil(err)
-	assert.True(query.Valid())
-	assert.Equal("SELECT script('32')", query.ToSql())
-}
-
-type mockComplexArg struct {
-	Value int
-	Name  string
-}
-
-func TestScriptQueryBuilder_Build_ComplexArg(t *testing.T) {
-	assert := assert.New(t)
-
-	b := NewScriptQueryBuilder()
-	b.SetScript("script")
-	b.AddArg(mockComplexArg{Value: 26, Name: "someName"})
-
-	query, err := b.Build()
-	assert.Nil(err)
-	assert.True(query.Valid())
-	assert.Equal("SELECT script('{\"Value\":26,\"Name\":\"someName\"}')", query.ToSql())
-}
-
-type mockUnmarshalable struct{}
-
-func (mu mockUnmarshalable) MarshalJSON() ([]byte, error) {
-	return nil, fmt.Errorf("someError")
-}
-
-func TestScriptQueryBuilder_Build_Unmarshallable(t *testing.T) {
-	assert := assert.New(t)
-
-	b := NewScriptQueryBuilder()
-	b.SetScript("script")
-	b.AddArg(mockUnmarshalable{})
-
-	_, err := b.Build()
-	assert.True(errors.IsErrorWithCode(err, errors.ErrSqlTranslationFailed))
-	cause := errors.Unwrap(err)
-	assert.True(strings.Contains(cause.Error(), "someError"))
-}
-
-type mockUnmarshalableConvertible struct{}
-
-func (mc mockUnmarshalableConvertible) Convert() interface{} {
-	return mockUnmarshalable{}
-}
-
-func TestScriptQueryBuilder_Build_UnmarshallableConvertible(t *testing.T) {
-	assert := assert.New(t)
-
-	b := NewScriptQueryBuilder()
-	b.SetScript("script")
-	b.AddArg(mockUnmarshalableConvertible{})
-
-	_, err := b.Build()
-	assert.True(errors.IsErrorWithCode(err, errors.ErrSqlTranslationFailed))
-	cause := errors.Unwrap(err)
-	assert.True(strings.Contains(cause.Error(), "someError"))
 }
 
 func TestScriptQueryBuilder_Build_MultiArgs(t *testing.T) {
@@ -190,4 +112,17 @@ func TestScriptQueryBuilder_Build_MultiArgs(t *testing.T) {
 	assert.Nil(err)
 	assert.True(query.Valid())
 	assert.Equal("SELECT script('arg1', 'arg2')", query.ToSql())
+}
+
+func TestScriptQueryBuilder_Build_ArgWithError(t *testing.T) {
+	assert := assert.New(t)
+
+	b := NewScriptQueryBuilder()
+	b.SetScript("script")
+	b.AddArg(mockUnmarshalable{})
+
+	_, err := b.Build()
+	assert.True(errors.IsErrorWithCode(err, errors.ErrSqlTranslationFailed))
+	cause := errors.Unwrap(err)
+	assert.True(strings.Contains(cause.Error(), "someError"))
 }

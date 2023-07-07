@@ -17,7 +17,6 @@ type SelectQueryBuilder interface {
 }
 
 type selectQueryBuilder struct {
-	action    string
 	propsKeys map[string]bool
 	props     []string
 	table     string
@@ -27,7 +26,6 @@ type selectQueryBuilder struct {
 
 func NewSelectQueryBuilder() SelectQueryBuilder {
 	return &selectQueryBuilder{
-		action:    "SELECT",
 		propsKeys: make(map[string]bool),
 	}
 }
@@ -77,7 +75,7 @@ func (b *selectQueryBuilder) Build() (Query, error) {
 	}
 
 	propsAsStr := b.propsToStr()
-	sqlQuery := fmt.Sprintf("%s %s FROM %s", b.action, propsAsStr, b.table)
+	sqlQuery := fmt.Sprintf("SELECT %s FROM %s", propsAsStr, b.table)
 	if b.filter != nil {
 		sqlQuery += fmt.Sprintf(" WHERE %s", b.filter.ToSql())
 	}

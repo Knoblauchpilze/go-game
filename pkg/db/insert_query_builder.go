@@ -1,119 +1,114 @@
 package db
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/KnoblauchPilze/go-game/pkg/errors"
 )
 
-type ScriptQueryBuilder interface {
+type InsertQueryBuilder interface {
 	QueryBuilder
 
-	SetHasReturnValue(hasReturnValue bool)
-	SetScript(script string) error
-	AddArg(arg interface{}) error
+	SetTable(table string) error
+	AddElement(column string, value interface{}) error
 	SetVerbose(verbose bool)
 }
 
-type Convertible interface {
-	Convert() interface{}
+type insertQueryBuilder struct {
+	columns map[string]bool
+	props   []sqlProp
+	table   string
+	verbose bool
 }
 
-type scriptQueryBuilder struct {
-	hasReturnValue bool
-	script         string
-	args           []interface{}
-	verbose        bool
+type sqlProp struct {
+	column string
+	value  interface{}
 }
 
-func NewScriptQueryBuilder() ScriptQueryBuilder {
-	return &scriptQueryBuilder{}
+func NewInsertQueryBuilder() InsertQueryBuilder {
+	return &insertQueryBuilder{
+		columns: make(map[string]bool),
+	}
 }
 
-func (b *scriptQueryBuilder) SetHasReturnValue(hasReturnValue bool) {
-	b.hasReturnValue = hasReturnValue
-}
-
-func (b *scriptQueryBuilder) SetScript(script string) error {
-	if len(script) == 0 {
-		return errors.NewCode(errors.ErrInvalidSqlScript)
+func (b *insertQueryBuilder) SetTable(table string) error {
+	if len(table) == 0 {
+		return errors.NewCode(errors.ErrInvalidSqlTable)
 	}
 
-	b.script = script
+	b.table = table
 	return nil
 }
 
-func (b *scriptQueryBuilder) AddArg(arg interface{}) error {
-	if arg == nil {
-		return errors.NewCode(errors.ErrInvalidSqlScriptArg)
+func (b *insertQueryBuilder) AddElement(column string, value interface{}) error {
+	if len(column) == 0 {
+		return errors.NewCode(errors.ErrInvalidSqlColumn)
 	}
 
-	b.args = append(b.args, arg)
+	if _, ok := b.columns[column]; ok {
+		return errors.NewCode(errors.ErrDuplicatedSqlProp)
+	}
 
+	prop := sqlProp{
+		column: column,
+		value:  value,
+	}
+	b.columns[column] = true
+	b.props = append(b.props, prop)
 	return nil
 }
 
-func (b *scriptQueryBuilder) SetVerbose(verbose bool) {
+func (b *insertQueryBuilder) SetVerbose(verbose bool) {
 	b.verbose = verbose
 }
 
-func (b *scriptQueryBuilder) Build() (Query, error) {
-	if len(b.script) == 0 {
-		return queryImpl{}, errors.WrapCode(errors.NewCode(errors.ErrInvalidSqlScript), errors.ErrSqlTranslationFailed)
+func (b *insertQueryBuilder) Build() (Query, error) {
+	if len(b.table) == 0 {
+		return queryImpl{}, errors.WrapCode(errors.NewCode(errors.ErrInvalidSqlTable), errors.ErrSqlTranslationFailed)
+	}
+	if len(b.props) == 0 {
+		return queryImpl{}, errors.WrapCode(errors.NewCode(errors.ErrNoColumnInSqlInsertQuery), errors.ErrSqlTranslationFailed)
 	}
 
-	argsAsStr, err := b.argsToStr()
+	columnsAsStr := b.columnsToStr()
+	valuesAsStr, err := b.valuesToStr()
 	if err != nil {
 		return queryImpl{}, errors.WrapCode(err, errors.ErrSqlTranslationFailed)
 	}
 
-	query := queryImpl{
-		verbose: b.verbose,
-	}
+	sqlQuery := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", b.table, columnsAsStr, valuesAsStr)
 
-	if b.hasReturnValue {
-		query.sqlCode = fmt.Sprintf("SELECT * FROM %s(%s)", b.script, argsAsStr)
-	} else {
-		query.sqlCode = fmt.Sprintf("SELECT %s(%s)", b.script, argsAsStr)
+	query := queryImpl{
+		sqlCode: sqlQuery,
+		verbose: b.verbose,
 	}
 
 	return query, nil
 }
 
-func (b *scriptQueryBuilder) argsToStr() (string, error) {
-	args := make([]string, 0, len(b.args))
-	for _, arg := range b.args {
-		argStr, err := argToStr(arg)
+func (b *insertQueryBuilder) columnsToStr() string {
+	var columns []string
+
+	for _, prop := range b.props {
+		columns = append(columns, prop.column)
+	}
+
+	return strings.Join(columns, ", ")
+}
+
+func (b *insertQueryBuilder) valuesToStr() (string, error) {
+	var values []string
+
+	for _, prop := range b.props {
+		arg, err := argToStr(prop.value)
 		if err != nil {
 			return "", err
 		}
 
-		args = append(args, fmt.Sprintf("'%s'", argStr))
+		values = append(values, arg)
 	}
 
-	return strings.Join(args, ", "), nil
-}
-
-func argToStr(arg interface{}) (string, error) {
-	var raw []byte
-	var out string
-	var err error
-
-	if convertible, ok := arg.(Convertible); ok {
-		raw, err = json.Marshal(convertible.Convert())
-		if err == nil {
-			out = string(raw)
-		}
-	} else if str, ok := arg.(string); ok {
-		out = str
-	} else {
-		raw, err = json.Marshal(arg)
-		if err == nil {
-			out = string(raw)
-		}
-	}
-
-	return out, err
+	return strings.Join(values, ", "), nil
 }
