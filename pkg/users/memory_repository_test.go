@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var defaultTestUser = User{Id: uuid.New(), Mail: "some@mail", Name: "someName", Password: "somePassword"}
+var defaultTestUser = User{Id: uuid.MustParse("08ce96a3-3430-48a8-a3b2-b1c987a207ca"), Mail: "some@mail", Name: "someName", Password: "somePassword"}
 
 func TestMemoryRepository_CreateUser_InvalidMail(t *testing.T) {
 	assert := assert.New(t)

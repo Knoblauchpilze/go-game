@@ -10,11 +10,15 @@ type userDbRepo struct {
 	db db.Database
 }
 
+const userTableName = "users"
+
 const userIdColumnName = "id"
 const userMailColumnName = "mail"
 const userNameColumnName = "name"
 const userPasswordColumnName = "password"
 const userCreatedAtColumnName = "created_at"
+
+var insertQueryBuilderFunc = db.NewInsertQueryBuilder
 
 func NewDbRepository(db db.Database) Repository {
 	return &userDbRepo{
@@ -23,14 +27,41 @@ func NewDbRepository(db db.Database) Repository {
 }
 
 func (repo *userDbRepo) Create(user User) (uuid.UUID, error) {
-	return uuid.UUID{}, errors.NewCode(errors.ErrNotImplemented)
+	if err := user.validate(); err != nil {
+		return uuid.UUID{}, err
+	}
+	out := user.Id
+
+	qb := insertQueryBuilderFunc()
+
+	qb.SetTable(userTableName)
+
+	qb.AddElement(userIdColumnName, user.Id)
+	qb.AddElement(userMailColumnName, user.Mail)
+	qb.AddElement(userNameColumnName, user.Name)
+	qb.AddElement(userPasswordColumnName, user.Password)
+
+	qb.SetVerbose(true)
+
+	query, err := qb.Build()
+	if err != nil {
+		return out, errors.WrapCode(err, errors.ErrUserCreationFailure)
+	}
+
+	rows := repo.db.Query(query)
+	if err := rows.Err(); err != nil {
+		return out, errors.WrapCode(err, errors.ErrUserCreationFailure)
+	}
+	rows.Close()
+
+	return out, nil
 }
 
 func (repo *userDbRepo) Get(id uuid.UUID) (User, error) {
 	var user User
 
 	qb := db.NewSelectQueryBuilder()
-	qb.SetTable("users")
+	qb.SetTable(userTableName)
 
 	qb.AddProp(userIdColumnName)
 	qb.AddProp(userMailColumnName)
