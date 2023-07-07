@@ -45,18 +45,18 @@ func (repo *userDbRepo) Get(id uuid.UUID) (User, error) {
 		return user, errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
 	}
 
-	result := repo.db.Query(query)
-	if err := result.Err(); err != nil {
+	rows := repo.db.Query(query)
+	if err := rows.Err(); err != nil {
 		return user, err
 	}
 
-	defer result.Close()
+	defer rows.Close()
 
 	scanner := func(row db.Scannable) error {
 		return row.Scan(&user.Id, &user.Mail, &user.Name, &user.Password, &user.CreatedAt)
 	}
 
-	if err := result.GetSingleValue(scanner); err != nil {
+	if err := rows.GetSingleValue(scanner); err != nil {
 		return user, errors.WrapCode(err, errors.ErrDbCorruptedData)
 	}
 
@@ -86,12 +86,12 @@ func (repo *userDbRepo) GetAll() ([]uuid.UUID, error) {
 		return users, err
 	}
 
-	result := repo.db.Query(query)
-	if err := result.Err(); err != nil {
+	rows := repo.db.Query(query)
+	if err := rows.Err(); err != nil {
 		return users, errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
 	}
 
-	defer result.Close()
+	defer rows.Close()
 
 	scanner := func(row db.Scannable) error {
 		var id uuid.UUID
@@ -103,7 +103,7 @@ func (repo *userDbRepo) GetAll() ([]uuid.UUID, error) {
 		return nil
 	}
 
-	if err := result.GetAll(scanner); err != nil {
+	if err := rows.GetAll(scanner); err != nil {
 		return users, errors.WrapCode(err, errors.ErrDbCorruptedData)
 	}
 
