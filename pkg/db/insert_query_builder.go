@@ -48,7 +48,7 @@ func (b *insertQueryBuilder) AddElement(column string, value interface{}) error 
 	}
 
 	if _, ok := b.columns[column]; ok {
-		return errors.NewCode(errors.ErrDuplicatedSqlProp)
+		return errors.NewCode(errors.ErrDuplicatedSqlColumn)
 	}
 
 	prop := sqlProp{
