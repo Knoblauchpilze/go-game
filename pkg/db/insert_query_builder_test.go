@@ -1,6 +1,7 @@
 package db
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/KnoblauchPilze/go-game/pkg/errors"
@@ -99,4 +100,17 @@ func TestInsertQueryBuilder_Build_MultiColumns(t *testing.T) {
 	assert.Nil(err)
 	assert.True(query.Valid())
 	assert.Equal("INSERT INTO table (column1, column2) VALUES (prop1, prop2)", query.ToSql())
+}
+
+func TestInsertQueryBuilder_Build_ArgWithError(t *testing.T) {
+	assert := assert.New(t)
+
+	b := NewInsertQueryBuilder()
+	b.SetTable("table")
+	b.AddElement("column", mockUnmarshalable{})
+
+	_, err := b.Build()
+	assert.True(errors.IsErrorWithCode(err, errors.ErrSqlTranslationFailed))
+	cause := errors.Unwrap(err)
+	assert.True(strings.Contains(cause.Error(), "someError"))
 }
