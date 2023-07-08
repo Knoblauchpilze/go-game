@@ -219,6 +219,82 @@ func TestDbRepository_GetUser(t *testing.T) {
 	assert.Equal(1, r.closeCalled)
 }
 
+func TestDbRepository_Delete_QueryBuildError(t *testing.T) {
+	assert := assert.New(t)
+	t.Cleanup(resetQueryBuilderFuncs)
+
+	m := &mockDb{
+		rows: &mockRows{},
+	}
+	deleteQueryBuilderFunc = func() db.DeleteQueryBuilder {
+		return mockSelectQueryBuilder{
+			buildErr: fmt.Errorf("someError"),
+		}
+	}
+	repo := NewDbRepository(m)
+
+	err := repo.Delete(uuid.New())
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestCreationFailed))
+	cause := errors.Unwrap(err)
+	assert.Equal("someError", cause.Error())
+}
+
+func TestDbRepository_Delete_FilterBuildError(t *testing.T) {
+	assert := assert.New(t)
+	t.Cleanup(resetQueryBuilderFuncs)
+
+	m := &mockDb{
+		rows: &mockRows{},
+	}
+	inFilterBuilderFunc = func() db.InFilterBuilder {
+		return mockFilterBuilder{
+			buildErr: fmt.Errorf("someError"),
+		}
+	}
+	repo := NewDbRepository(m)
+
+	err := repo.Delete(uuid.New())
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestCreationFailed))
+	cause := errors.Unwrap(err)
+	assert.Equal("someError", cause.Error())
+}
+
+func TestDbRepository_Delete_DbQueryError(t *testing.T) {
+	assert := assert.New(t)
+
+	m := &mockDb{
+		rows: &mockRows{
+			err: fmt.Errorf("someError"),
+		},
+	}
+	repo := NewDbRepository(m)
+
+	err := repo.Delete(uuid.New())
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestFailed))
+	cause := errors.Unwrap(err)
+	assert.Equal("someError", cause.Error())
+}
+
+func TestDbRepository_Delete(t *testing.T) {
+	assert := assert.New(t)
+
+	r := &mockRows{}
+	m := &mockDb{
+		rows: r,
+	}
+	repo := NewDbRepository(m)
+
+	err := repo.Delete(defaultTestUser.Id)
+	assert.Nil(err)
+
+	assert.Equal(1, m.queryCalls)
+	assert.True(m.queries[0].Valid())
+	testUserDeleteQuery := "DELETE FROM users WHERE id in ('08ce96a3-3430-48a8-a3b2-b1c987a207ca')"
+	assert.Equal(testUserDeleteQuery, m.queries[0].ToSql())
+
+	assert.Equal(1, r.closeCalled)
+}
+
 func TestDbRepository_GetAll_QueryBuildError(t *testing.T) {
 	assert := assert.New(t)
 	t.Cleanup(resetQueryBuilderFuncs)
@@ -335,6 +411,7 @@ func resetQueryBuilderFuncs() {
 	insertQueryBuilderFunc = db.NewInsertQueryBuilder
 	selectQueryBuilderFunc = db.NewSelectQueryBuilder
 	inFilterBuilderFunc = db.NewInFilterBuilder
+	deleteQueryBuilderFunc = db.NewDeleteQueryBuilder
 }
 
 type mockDb struct {

@@ -21,6 +21,7 @@ const userCreatedAtColumnName = "created_at"
 var insertQueryBuilderFunc = db.NewInsertQueryBuilder
 var selectQueryBuilderFunc = db.NewSelectQueryBuilder
 var inFilterBuilderFunc = db.NewInFilterBuilder
+var deleteQueryBuilderFunc = db.NewDeleteQueryBuilder
 
 func NewDbRepository(db db.Database) Repository {
 	return &userDbRepo{
@@ -112,7 +113,34 @@ func (repo *userDbRepo) Patch(id uuid.UUID, patch User) (User, error) {
 }
 
 func (repo *userDbRepo) Delete(id uuid.UUID) error {
-	return errors.NewCode(errors.ErrNotImplemented)
+	qb := deleteQueryBuilderFunc()
+
+	qb.SetTable(userTableName)
+
+	fb := inFilterBuilderFunc()
+	fb.SetKey(userIdColumnName)
+	fb.AddValue(id)
+	f, err := fb.Build()
+	if err != nil {
+		return errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
+	}
+
+	qb.SetFilter(f)
+
+	qb.SetVerbose(true)
+
+	query, err := qb.Build()
+	if err != nil {
+		return errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
+	}
+
+	rows := repo.db.Query(query)
+	if err := rows.Err(); err != nil {
+		return errors.WrapCode(err, errors.ErrDbRequestFailed)
+	}
+	rows.Close()
+
+	return nil
 }
 
 func (repo *userDbRepo) GetAll() ([]uuid.UUID, error) {
