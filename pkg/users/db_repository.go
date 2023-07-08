@@ -125,5 +125,5 @@ func (repo *userDbRepo) GetAll() ([]uuid.UUID, error) {
 		return users, errors.WrapCode(err, errors.ErrUserGetFailure)
 	}
 
-	return users, nil
+	return scanner.ids, nil
 }
