@@ -180,6 +180,24 @@ func TestDbRepository_GetUser_RowsFailure(t *testing.T) {
 	assert.Equal("someError", cause.Error())
 }
 
+func TestDbRepository_GetUser_Scanner(t *testing.T) {
+	assert := assert.New(t)
+
+	s := &mockScannable{}
+	r := &mockRows{
+		getSingleValueScannable: s,
+	}
+	m := &mockDb{
+		rows: r,
+	}
+	repo := NewDbRepository(m)
+
+	_, err := repo.Get(uuid.New())
+	assert.Nil(err)
+
+	assert.Equal(1, s.scanCalled)
+}
+
 func TestDbRepository_GetUser(t *testing.T) {
 	assert := assert.New(t)
 
@@ -244,11 +262,13 @@ type mockRows struct {
 	closeCalled int
 	empty       bool
 
-	singleValueCalled int
-	getSingleValueErr error
+	singleValueCalled       int
+	getSingleValueScannable db.Scannable
+	getSingleValueErr       error
 
-	allCalled int
-	getAllErr error
+	allCalled       int
+	getAllScannable db.Scannable
+	getAllErr       error
 }
 
 func (m *mockRows) Err() error {
@@ -265,11 +285,13 @@ func (m *mockRows) Empty() bool {
 
 func (m *mockRows) GetSingleValue(scanner db.ScanRow) error {
 	m.singleValueCalled++
+	scanner(m.getSingleValueScannable)
 	return m.getSingleValueErr
 }
 
 func (m *mockRows) GetAll(scanner db.ScanRow) error {
 	m.allCalled++
+	scanner(m.getAllScannable)
 	return m.getAllErr
 }
 
@@ -331,4 +353,14 @@ func (m mockFilterBuilder) AddValue(value interface{}) error {
 
 func (m mockFilterBuilder) Build() (db.Filter, error) {
 	return nil, m.buildErr
+}
+
+type mockScannable struct {
+	scanCalled int
+	scanErr    error
+}
+
+func (m *mockScannable) Scan(dest ...interface{}) error {
+	m.scanCalled++
+	return m.scanErr
 }
