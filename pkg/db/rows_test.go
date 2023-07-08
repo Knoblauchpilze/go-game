@@ -8,27 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type mockRows struct {
-	count        int
-	numberOfRows int
-	scanError    error
-	closeCalls   int
-}
-
-func (m *mockRows) Next() bool {
-	out := m.count < m.numberOfRows
-	m.count++
-	return out
-}
-
-func (m *mockRows) Scan(dest ...interface{}) error {
-	return m.scanError
-}
-
-func (m *mockRows) Close() {
-	m.closeCalls++
-}
-
 func TestRows_Err(t *testing.T) {
 	assert := assert.New(t)
 
@@ -45,7 +24,7 @@ func TestRows_Close(t *testing.T) {
 	r := newRows(nil, nil)
 	assert.NotPanics(r.Close)
 
-	var m mockRows
+	var m mockSqlRows
 	r = newRows(&m, nil)
 	r.Close()
 	assert.Equal(1, m.closeCalls)
@@ -57,11 +36,11 @@ func TestRows_Empty(t *testing.T) {
 	r := newRows(nil, nil)
 	assert.True(r.Empty())
 
-	m := &mockRows{}
+	m := &mockSqlRows{}
 	r = newRows(m, nil)
 	assert.True(r.Empty())
 
-	m = &mockRows{
+	m = &mockSqlRows{
 		numberOfRows: 1,
 	}
 	r = newRows(m, nil)
@@ -97,7 +76,7 @@ func TestRows_GetSingleValue(t *testing.T) {
 		return nil
 	}
 
-	m := &mockRows{
+	m := &mockSqlRows{
 		numberOfRows: 1,
 	}
 	r := newRows(m, nil)
@@ -115,7 +94,7 @@ func TestRows_GetSingleValue_CallsClose(t *testing.T) {
 		return nil
 	}
 
-	m := &mockRows{
+	m := &mockSqlRows{
 		numberOfRows: 1,
 	}
 	r := newRows(m, nil)
@@ -132,7 +111,7 @@ func TestRows_GetSingleValue_ScannerError(t *testing.T) {
 		return fmt.Errorf("someError")
 	}
 
-	m := &mockRows{
+	m := &mockSqlRows{
 		numberOfRows: 1,
 	}
 	r := newRows(m, nil)
@@ -152,7 +131,7 @@ func TestRows_GetSingleValue_WithMultipleValues(t *testing.T) {
 		return nil
 	}
 
-	m := &mockRows{
+	m := &mockSqlRows{
 		numberOfRows: 2,
 	}
 	r := newRows(m, nil)
@@ -189,7 +168,7 @@ func TestRows_GetAll(t *testing.T) {
 		return nil
 	}
 
-	m := &mockRows{
+	m := &mockSqlRows{
 		numberOfRows: 2,
 	}
 	r := newRows(m, nil)
@@ -207,7 +186,7 @@ func TestRows_GetAll_CallsClose(t *testing.T) {
 		return nil
 	}
 
-	m := &mockRows{
+	m := &mockSqlRows{
 		numberOfRows: 2,
 	}
 	r := newRows(m, nil)
@@ -224,7 +203,7 @@ func TestRows_GetAll_ScannerError(t *testing.T) {
 		return fmt.Errorf("someError")
 	}
 
-	m := &mockRows{
+	m := &mockSqlRows{
 		numberOfRows: 2,
 	}
 	r := newRows(m, nil)
@@ -233,4 +212,25 @@ func TestRows_GetAll_ScannerError(t *testing.T) {
 	cause := errors.Unwrap(err)
 	assert.Equal("someError", cause.Error())
 	assert.Equal(1, calls)
+}
+
+type mockSqlRows struct {
+	count        int
+	numberOfRows int
+	scanError    error
+	closeCalls   int
+}
+
+func (m *mockSqlRows) Next() bool {
+	out := m.count < m.numberOfRows
+	m.count++
+	return out
+}
+
+func (m *mockSqlRows) Scan(dest ...interface{}) error {
+	return m.scanError
+}
+
+func (m *mockSqlRows) Close() {
+	m.closeCalls++
 }
