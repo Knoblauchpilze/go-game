@@ -5,6 +5,7 @@ import "github.com/KnoblauchPilze/go-game/pkg/errors"
 type QueryExecutor interface {
 	RunQuery(qb QueryBuilder) error
 	RunQueryAndScanSingleResult(qb QueryBuilder, scan ScanRow) error
+	RunQueryAndScanAllResults(qb QueryBuilder, scan ScanRow) error
 }
 
 type queryExecutorImpl struct {
@@ -36,6 +37,21 @@ func (qe *queryExecutorImpl) RunQueryAndScanSingleResult(qb QueryBuilder, scan S
 	defer rows.Close()
 
 	if err := rows.GetSingleValue(scan); err != nil {
+		return errors.WrapCode(err, errors.ErrDbCorruptedData)
+	}
+
+	return nil
+}
+
+func (qe *queryExecutorImpl) RunQueryAndScanAllResults(qb QueryBuilder, scan ScanRow) error {
+	rows, err := qe.runQueryAndReturnRows(qb)
+	if err != nil {
+		return err
+	}
+
+	defer rows.Close()
+
+	if err := rows.GetAll(scan); err != nil {
 		return errors.WrapCode(err, errors.ErrDbCorruptedData)
 	}
 

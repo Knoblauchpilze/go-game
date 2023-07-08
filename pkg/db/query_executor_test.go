@@ -109,6 +109,7 @@ func TestQueryExecutor_RunQueryAndScanSingleResult(t *testing.T) {
 	err := qe.RunQueryAndScanSingleResult(mqb, emptyScanner)
 	assert.Nil(err)
 	assert.Equal(1, mdb.queryCalls)
+	assert.Equal(1, mr.singleValueCalled)
 	assert.Equal(1, mr.closeCalled)
 }
 
@@ -142,6 +143,60 @@ func TestQueryExecutor_RunQueryAndScanSingleResult_ScanError(t *testing.T) {
 	qe := NewQueryExecutor(mdb)
 
 	err := qe.RunQueryAndScanSingleResult(mqb, emptyScanner)
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbCorruptedData))
+	cause := errors.Unwrap(err)
+	assert.Contains(cause.Error(), "someError")
+	assert.Equal(1, mr.closeCalled)
+}
+
+func TestQueryExecutor_RunQueryAndScanAllResults(t *testing.T) {
+	assert := assert.New(t)
+
+	mqb := mockQueryBuilder{}
+	mr := &mockRows{}
+	mdb := &mockDb{
+		rows: mr,
+	}
+
+	qe := NewQueryExecutor(mdb)
+
+	err := qe.RunQueryAndScanAllResults(mqb, emptyScanner)
+	assert.Nil(err)
+	assert.Equal(1, mdb.queryCalls)
+	assert.Equal(1, mr.allCalled)
+	assert.Equal(1, mr.closeCalled)
+}
+
+func TestQueryExecutor_RunQueryAndScanAllResults_Error(t *testing.T) {
+	assert := assert.New(t)
+
+	mqb := mockQueryBuilder{}
+	mdb := &mockDb{
+		rows: &mockRows{
+			err: fmt.Errorf("someError"),
+		},
+	}
+
+	qe := NewQueryExecutor(mdb)
+
+	err := qe.RunQueryAndScanAllResults(mqb, emptyScanner)
+	assert.Contains(err.Error(), "someError")
+}
+
+func TestQueryExecutor_RunQueryAndScanAllResults_ScanError(t *testing.T) {
+	assert := assert.New(t)
+
+	mqb := mockQueryBuilder{}
+	mr := &mockRows{
+		getAllErr: fmt.Errorf("someError"),
+	}
+	mdb := &mockDb{
+		rows: mr,
+	}
+
+	qe := NewQueryExecutor(mdb)
+
+	err := qe.RunQueryAndScanAllResults(mqb, emptyScanner)
 	assert.True(errors.IsErrorWithCode(err, errors.ErrDbCorruptedData))
 	cause := errors.Unwrap(err)
 	assert.Contains(cause.Error(), "someError")
