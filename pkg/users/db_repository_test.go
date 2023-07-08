@@ -91,25 +91,23 @@ func TestDbRepository_GetUser_QueryExecutorError(t *testing.T) {
 	assert.Equal("someError", cause.Error())
 }
 
-// func TestDbRepository_GetUser_FilterBuildError(t *testing.T) {
-// 	assert := assert.New(t)
-// 	t.Cleanup(resetQueryBuilderFuncs)
+func TestDbRepository_GetUser_FilterBuildError(t *testing.T) {
+	assert := assert.New(t)
+	t.Cleanup(resetQueryBuilderFuncs)
 
-// 	m := &mockDb{
-// 		rows: &mockRows{},
-// 	}
-// 	inFilterBuilderFunc = func() db.InFilterBuilder {
-// 		return mockFilterBuilder{
-// 			buildErr: fmt.Errorf("someError"),
-// 		}
-// 	}
-// 	repo := NewDbRepository(m)
+	mqe := &mockQueryExecutor{}
+	inFilterBuilderFunc = func() db.InFilterBuilder {
+		return mockFilterBuilder{
+			buildErr: fmt.Errorf("someError"),
+		}
+	}
+	repo := NewDbRepository(mqe)
 
-// 	_, err := repo.Get(uuid.New())
-// 	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestCreationFailed))
-// 	cause := errors.Unwrap(err)
-// 	assert.Equal("someError", cause.Error())
-// }
+	_, err := repo.Get(uuid.New())
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestCreationFailed))
+	cause := errors.Unwrap(err)
+	assert.Equal("someError", cause.Error())
+}
 
 func TestDbRepository_GetUser(t *testing.T) {
 	assert := assert.New(t)
@@ -143,25 +141,23 @@ func TestDbRepository_Delete_QueryExecutorError(t *testing.T) {
 	assert.Equal("someError", cause.Error())
 }
 
-// func TestDbRepository_Delete_FilterBuildError(t *testing.T) {
-// 	assert := assert.New(t)
-// 	t.Cleanup(resetQueryBuilderFuncs)
+func TestDbRepository_Delete_FilterBuildError(t *testing.T) {
+	assert := assert.New(t)
+	t.Cleanup(resetQueryBuilderFuncs)
 
-// 	m := &mockDb{
-// 		rows: &mockRows{},
-// 	}
-// 	inFilterBuilderFunc = func() db.InFilterBuilder {
-// 		return mockFilterBuilder{
-// 			buildErr: fmt.Errorf("someError"),
-// 		}
-// 	}
-// 	repo := NewDbRepository(m)
+	mqe := &mockQueryExecutor{}
+	inFilterBuilderFunc = func() db.InFilterBuilder {
+		return mockFilterBuilder{
+			buildErr: fmt.Errorf("someError"),
+		}
+	}
+	repo := NewDbRepository(mqe)
 
-// 	err := repo.Delete(uuid.New())
-// 	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestCreationFailed))
-// 	cause := errors.Unwrap(err)
-// 	assert.Equal("someError", cause.Error())
-// }
+	err := repo.Delete(uuid.New())
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestCreationFailed))
+	cause := errors.Unwrap(err)
+	assert.Equal("someError", cause.Error())
+}
 
 func TestDbRepository_Delete(t *testing.T) {
 	assert := assert.New(t)
@@ -185,12 +181,12 @@ func TestDbRepository_GetAll_QueryExecutorError(t *testing.T) {
 	t.Cleanup(resetQueryBuilderFuncs)
 
 	mqe := &mockQueryExecutor{
-		runQueryErr: fmt.Errorf("someError"),
+		runQueryAndScanAllResultsErr: fmt.Errorf("someError"),
 	}
 	repo := NewDbRepository(mqe)
 
-	err := repo.Delete(uuid.New())
-	assert.True(errors.IsErrorWithCode(err, errors.ErrUserDeletionFailure))
+	_, err := repo.GetAll()
+	assert.True(errors.IsErrorWithCode(err, errors.ErrUserGetFailure))
 	cause := errors.Unwrap(err)
 	assert.Equal("someError", cause.Error())
 }
@@ -248,4 +244,20 @@ func (m *mockQueryExecutor) RunQueryAndScanAllResults(qb db.QueryBuilder, scan d
 	m.runQueryAndScanAllResultsCalled++
 	m.queries = append(m.queries, qb)
 	return m.runQueryAndScanAllResultsErr
+}
+
+type mockFilterBuilder struct {
+	buildErr error
+}
+
+func (m mockFilterBuilder) SetKey(key string) error {
+	return nil
+}
+
+func (m mockFilterBuilder) AddValue(value interface{}) error {
+	return nil
+}
+
+func (m mockFilterBuilder) Build() (db.Filter, error) {
+	return nil, m.buildErr
 }
