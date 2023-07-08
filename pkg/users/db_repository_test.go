@@ -44,8 +44,6 @@ func TestDbRepository_CreateUser_InvalidPassword(t *testing.T) {
 
 func TestDbRepository_CreateUser_QueryExecutorError(t *testing.T) {
 	assert := assert.New(t)
-	// https://stackoverflow.com/questions/61107654/make-go-tests-independent-from-each-other-mutation-of-global-vars
-	t.Cleanup(resetQueryBuilderFuncs)
 
 	mqe := &mockQueryExecutor{
 		runQueryErr: fmt.Errorf("someError"),
@@ -78,7 +76,6 @@ func TestDbRepository_CreateUser(t *testing.T) {
 
 func TestDbRepository_GetUser_QueryExecutorError(t *testing.T) {
 	assert := assert.New(t)
-	t.Cleanup(resetQueryBuilderFuncs)
 
 	mqe := &mockQueryExecutor{
 		runQueryAndScanSingleResultErr: fmt.Errorf("someError"),
@@ -93,6 +90,7 @@ func TestDbRepository_GetUser_QueryExecutorError(t *testing.T) {
 
 func TestDbRepository_GetUser_FilterBuildError(t *testing.T) {
 	assert := assert.New(t)
+	// https://stackoverflow.com/questions/61107654/make-go-tests-independent-from-each-other-mutation-of-global-vars
 	t.Cleanup(resetQueryBuilderFuncs)
 
 	mqe := &mockQueryExecutor{}
@@ -128,7 +126,6 @@ func TestDbRepository_GetUser(t *testing.T) {
 
 func TestDbRepository_Delete_QueryExecutorError(t *testing.T) {
 	assert := assert.New(t)
-	t.Cleanup(resetQueryBuilderFuncs)
 
 	mqe := &mockQueryExecutor{
 		runQueryErr: fmt.Errorf("someError"),
@@ -178,7 +175,6 @@ func TestDbRepository_Delete(t *testing.T) {
 
 func TestDbRepository_GetAll_QueryExecutorError(t *testing.T) {
 	assert := assert.New(t)
-	t.Cleanup(resetQueryBuilderFuncs)
 
 	mqe := &mockQueryExecutor{
 		runQueryAndScanAllResultsErr: fmt.Errorf("someError"),
