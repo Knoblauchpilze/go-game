@@ -19,6 +19,8 @@ const userPasswordColumnName = "password"
 const userCreatedAtColumnName = "created_at"
 
 var insertQueryBuilderFunc = db.NewInsertQueryBuilder
+var selectQueryBuilderFunc = db.NewSelectQueryBuilder
+var inFilterBuilderFunc = db.NewInFilterBuilder
 
 func NewDbRepository(db db.Database) Repository {
 	return &userDbRepo{
@@ -45,7 +47,7 @@ func (repo *userDbRepo) Create(user User) (uuid.UUID, error) {
 
 	query, err := qb.Build()
 	if err != nil {
-		return out, errors.WrapCode(err, errors.ErrUserCreationFailure)
+		return out, errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
 	}
 
 	rows := repo.db.Query(query)
@@ -60,7 +62,8 @@ func (repo *userDbRepo) Create(user User) (uuid.UUID, error) {
 func (repo *userDbRepo) Get(id uuid.UUID) (User, error) {
 	var user User
 
-	qb := db.NewSelectQueryBuilder()
+	qb := selectQueryBuilderFunc()
+
 	qb.SetTable(userTableName)
 
 	qb.AddProp(userIdColumnName)
@@ -68,6 +71,16 @@ func (repo *userDbRepo) Get(id uuid.UUID) (User, error) {
 	qb.AddProp(userNameColumnName)
 	qb.AddProp(userPasswordColumnName)
 	qb.AddProp(userCreatedAtColumnName)
+
+	fb := inFilterBuilderFunc()
+	fb.SetKey(userIdColumnName)
+	fb.AddValue(id)
+	f, err := fb.Build()
+	if err != nil {
+		return user, errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
+	}
+
+	qb.SetFilter(f)
 
 	qb.SetVerbose(true)
 
@@ -78,7 +91,7 @@ func (repo *userDbRepo) Get(id uuid.UUID) (User, error) {
 
 	rows := repo.db.Query(query)
 	if err := rows.Err(); err != nil {
-		return user, err
+		return user, errors.WrapCode(err, errors.ErrDbRequestFailed)
 	}
 
 	defer rows.Close()

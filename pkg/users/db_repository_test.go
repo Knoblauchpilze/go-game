@@ -6,6 +6,7 @@ import (
 
 	"github.com/KnoblauchPilze/go-game/pkg/db"
 	"github.com/KnoblauchPilze/go-game/pkg/errors"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -63,7 +64,7 @@ func TestDbRepository_CreateUser_QueryBuildError(t *testing.T) {
 	repo := NewDbRepository(m)
 
 	_, err := repo.Create(defaultTestUser)
-	assert.True(errors.IsErrorWithCode(err, errors.ErrUserCreationFailure))
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestCreationFailed))
 	cause := errors.Unwrap(err)
 	assert.Equal("someError", cause.Error())
 }
@@ -106,9 +107,103 @@ func TestDbRepository_CreateUser(t *testing.T) {
 	assert.Equal(defaultTestUser.Id, out)
 }
 
+func TestDbRepository_GetUser_QueryBuildError(t *testing.T) {
+	assert := assert.New(t)
+	t.Cleanup(resetQueryBuilderFuncs)
+
+	m := &mockDb{
+		rows: &mockRows{},
+	}
+	selectQueryBuilderFunc = func() db.SelectQueryBuilder {
+		return mockSelectQueryBuilder{
+			buildErr: fmt.Errorf("someError"),
+		}
+	}
+	repo := NewDbRepository(m)
+
+	_, err := repo.Get(uuid.New())
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestCreationFailed))
+	cause := errors.Unwrap(err)
+	assert.Equal("someError", cause.Error())
+}
+
+func TestDbRepository_GetUser_FilterBuildError(t *testing.T) {
+	assert := assert.New(t)
+	t.Cleanup(resetQueryBuilderFuncs)
+
+	m := &mockDb{
+		rows: &mockRows{},
+	}
+	inFilterBuilderFunc = func() db.InFilterBuilder {
+		return mockFilterBuilder{
+			buildErr: fmt.Errorf("someError"),
+		}
+	}
+	repo := NewDbRepository(m)
+
+	_, err := repo.Get(uuid.New())
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestCreationFailed))
+	cause := errors.Unwrap(err)
+	assert.Equal("someError", cause.Error())
+}
+
+func TestDbRepository_GetUser_DbQueryError(t *testing.T) {
+	assert := assert.New(t)
+
+	m := &mockDb{
+		rows: &mockRows{
+			err: fmt.Errorf("someError"),
+		},
+	}
+	repo := NewDbRepository(m)
+
+	_, err := repo.Get(uuid.New())
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestFailed))
+	cause := errors.Unwrap(err)
+	assert.Equal("someError", cause.Error())
+}
+
+func TestDbRepository_GetUser_RowsFailure(t *testing.T) {
+	assert := assert.New(t)
+
+	r := &mockRows{
+		getSingleValueErr: fmt.Errorf("someError"),
+	}
+	m := &mockDb{
+		rows: r,
+	}
+	repo := NewDbRepository(m)
+
+	_, err := repo.Get(uuid.New())
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbCorruptedData))
+	cause := errors.Unwrap(err)
+	assert.Equal("someError", cause.Error())
+}
+
+func TestDbRepository_GetUser(t *testing.T) {
+	assert := assert.New(t)
+
+	r := &mockRows{}
+	m := &mockDb{
+		rows: r,
+	}
+	repo := NewDbRepository(m)
+
+	_, err := repo.Get(defaultTestUser.Id)
+	assert.Nil(err)
+
+	assert.Equal(1, m.queryCalls)
+	assert.True(m.queries[0].Valid())
+	testUserSelectQuery := "SELECT id, mail, name, password, created_at FROM users WHERE id in ('08ce96a3-3430-48a8-a3b2-b1c987a207ca')"
+	assert.Equal(testUserSelectQuery, m.queries[0].ToSql())
+
+	assert.Equal(1, r.closeCalled)
+}
+
 func resetQueryBuilderFuncs() {
-	fmt.Println("haha")
 	insertQueryBuilderFunc = db.NewInsertQueryBuilder
+	selectQueryBuilderFunc = db.NewSelectQueryBuilder
+	inFilterBuilderFunc = db.NewInFilterBuilder
 }
 
 type mockDb struct {
@@ -194,9 +289,46 @@ func (m mockInsertQueryBuilder) SetFilter(filter db.Filter) error {
 	return nil
 }
 
-func (m mockInsertQueryBuilder) SetVerbose(verbose bool) {
-}
+func (m mockInsertQueryBuilder) SetVerbose(verbose bool) {}
 
 func (m mockInsertQueryBuilder) Build() (db.Query, error) {
+	return nil, m.buildErr
+}
+
+type mockSelectQueryBuilder struct {
+	buildErr error
+}
+
+func (m mockSelectQueryBuilder) SetTable(table string) error {
+	return nil
+}
+
+func (m mockSelectQueryBuilder) AddProp(prop string) error {
+	return nil
+}
+
+func (m mockSelectQueryBuilder) SetFilter(filter db.Filter) error {
+	return nil
+}
+
+func (m mockSelectQueryBuilder) SetVerbose(verbose bool) {}
+
+func (m mockSelectQueryBuilder) Build() (db.Query, error) {
+	return nil, m.buildErr
+}
+
+type mockFilterBuilder struct {
+	buildErr error
+}
+
+func (m mockFilterBuilder) SetKey(key string) error {
+	return nil
+}
+
+func (m mockFilterBuilder) AddValue(value interface{}) error {
+	return nil
+}
+
+func (m mockFilterBuilder) Build() (db.Filter, error) {
 	return nil, m.buildErr
 }
