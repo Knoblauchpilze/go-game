@@ -7,18 +7,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUserRowParser_Parse(t *testing.T) {
+func TestUserRowParser_ScanRow(t *testing.T) {
 	assert := assert.New(t)
 
 	m := &mockScannable{}
 	urp := userRowParser{}
 
-	err := urp.Parse(m)
+	err := urp.ScanRow(m)
 	assert.Nil(err)
 	assert.Equal(1, m.scanCalled)
 }
 
-func TestUserRowParser_Parse_Error(t *testing.T) {
+func TestUserRowParser_ScanRow_Error(t *testing.T) {
 	assert := assert.New(t)
 
 	m := &mockScannable{
@@ -26,23 +26,23 @@ func TestUserRowParser_Parse_Error(t *testing.T) {
 	}
 	urp := userRowParser{}
 
-	err := urp.Parse(m)
+	err := urp.ScanRow(m)
 	assert.Contains(err.Error(), "someError")
 	assert.Equal(1, m.scanCalled)
 }
 
-func TestUserIdsParser_Parse(t *testing.T) {
+func TestUserIdsParser_ScanRow(t *testing.T) {
 	assert := assert.New(t)
 
 	m := &mockScannable{}
 	urp := userIdsParser{}
 
-	err := urp.Parse(m)
+	err := urp.ScanRow(m)
 	assert.Nil(err)
 	assert.Equal(1, m.scanCalled)
 }
 
-func TestUserIdsParser_Parse_Error(t *testing.T) {
+func TestUserIdsParser_ScanRow_Error(t *testing.T) {
 	assert := assert.New(t)
 
 	m := &mockScannable{
@@ -50,7 +50,7 @@ func TestUserIdsParser_Parse_Error(t *testing.T) {
 	}
 	urp := userIdsParser{}
 
-	err := urp.Parse(m)
+	err := urp.ScanRow(m)
 	assert.Contains(err.Error(), "someError")
 	assert.Equal(1, m.scanCalled)
 }

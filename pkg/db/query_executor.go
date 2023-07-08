@@ -4,8 +4,8 @@ import "github.com/KnoblauchPilze/go-game/pkg/errors"
 
 type QueryExecutor interface {
 	RunQuery(qb QueryBuilder) error
-	RunQueryAndScanSingleResult(qb QueryBuilder, parser Parser) error
-	RunQueryAndScanAllResults(qb QueryBuilder, parser Parser) error
+	RunQueryAndScanSingleResult(qb QueryBuilder, parser RowParser) error
+	RunQueryAndScanAllResults(qb QueryBuilder, parser RowParser) error
 }
 
 type queryExecutorImpl struct {
@@ -28,7 +28,7 @@ func (qe *queryExecutorImpl) RunQuery(qb QueryBuilder) error {
 	return nil
 }
 
-func (qe *queryExecutorImpl) RunQueryAndScanSingleResult(qb QueryBuilder, parser Parser) error {
+func (qe *queryExecutorImpl) RunQueryAndScanSingleResult(qb QueryBuilder, parser RowParser) error {
 	rows, err := qe.runQueryAndReturnRows(qb)
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func (qe *queryExecutorImpl) RunQueryAndScanSingleResult(qb QueryBuilder, parser
 	return nil
 }
 
-func (qe *queryExecutorImpl) RunQueryAndScanAllResults(qb QueryBuilder, parser Parser) error {
+func (qe *queryExecutorImpl) RunQueryAndScanAllResults(qb QueryBuilder, parser RowParser) error {
 	rows, err := qe.runQueryAndReturnRows(qb)
 	if err != nil {
 		return err

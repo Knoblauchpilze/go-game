@@ -199,7 +199,7 @@ type mockParser struct {
 	parseErr    error
 }
 
-func (m *mockParser) Parse(row Scannable) error {
+func (m *mockParser) ScanRow(row Scannable) error {
 	m.parseCalled++
 	return m.parseErr
 }

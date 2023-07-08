@@ -272,18 +272,18 @@ func (m *mockRows) Empty() bool {
 	return m.empty
 }
 
-func (m *mockRows) GetSingleValue(parser Parser) error {
+func (m *mockRows) GetSingleValue(parser RowParser) error {
 	m.singleValueCalled++
 	if m.getSingleValueScannable != nil {
-		m.singleValueScanErr = parser.Parse(m.getSingleValueScannable)
+		m.singleValueScanErr = parser.ScanRow(m.getSingleValueScannable)
 	}
 	return m.getSingleValueErr
 }
 
-func (m *mockRows) GetAll(parser Parser) error {
+func (m *mockRows) GetAll(parser RowParser) error {
 	m.allCalled++
 	if m.getAllScannable != nil {
-		m.allScanErr = parser.Parse(m.getAllScannable)
+		m.allScanErr = parser.ScanRow(m.getAllScannable)
 	}
 	return m.getAllErr
 }
