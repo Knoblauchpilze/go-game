@@ -47,30 +47,6 @@ func (repo *userMemoryRepo) Get(id uuid.UUID) (User, error) {
 	return user, nil
 }
 
-func (repo *userMemoryRepo) Patch(id uuid.UUID, patch User) (User, error) {
-	repo.lock.Lock()
-	defer repo.lock.Unlock()
-
-	user, ok := repo.users[id]
-	if !ok {
-		return User{}, errors.NewCode(errors.ErrNoSuchUser)
-	}
-
-	if len(patch.Mail) > 0 {
-		user.Mail = patch.Mail
-	}
-	if len(patch.Name) > 0 {
-		user.Name = patch.Name
-	}
-	if len(patch.Password) > 0 {
-		user.Password = patch.Password
-	}
-
-	repo.users[id] = user
-
-	return user, nil
-}
-
 func (repo *userMemoryRepo) Delete(id uuid.UUID) error {
 	repo.lock.Lock()
 	defer repo.lock.Unlock()
