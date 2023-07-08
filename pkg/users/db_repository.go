@@ -78,15 +78,12 @@ func (repo *userDbRepo) Get(id uuid.UUID) (User, error) {
 
 	qb.SetVerbose(true)
 
-	scanner := func(row db.Scannable) error {
-		return row.Scan(&user.Id, &user.Mail, &user.Name, &user.Password, &user.CreatedAt)
-	}
-
+	scanner := &userRowParser{}
 	if err := repo.qe.RunQueryAndScanSingleResult(qb, scanner); err != nil {
 		return user, errors.WrapCode(err, errors.ErrUserGetFailure)
 	}
 
-	return user, nil
+	return scanner.user, nil
 }
 
 func (repo *userDbRepo) Patch(id uuid.UUID, patch User) (User, error) {
@@ -127,16 +124,7 @@ func (repo *userDbRepo) GetAll() ([]uuid.UUID, error) {
 
 	qb.SetVerbose(true)
 
-	scanner := func(row db.Scannable) error {
-		var id uuid.UUID
-		if err := row.Scan(&id); err != nil {
-			return err
-		}
-
-		users = append(users, id)
-		return nil
-	}
-
+	scanner := &userIdsParser{}
 	if err := repo.qe.RunQueryAndScanAllResults(qb, scanner); err != nil {
 		return users, errors.WrapCode(err, errors.ErrUserGetFailure)
 	}

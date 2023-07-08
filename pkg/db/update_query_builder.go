@@ -101,12 +101,12 @@ func (b *updateQueryBuilder) updatesToStr() (string, error) {
 	var updates []string
 
 	for _, prop := range b.props {
-		arg, err := argToStr(prop.value)
+		update, err := sqlPropAsUpdateToStr(prop)
 		if err != nil {
 			return "", err
 		}
 
-		updates = append(updates, fmt.Sprintf("%s = '%s'", prop.column, arg))
+		updates = append(updates, update)
 	}
 
 	return strings.Join(updates, ", "), nil

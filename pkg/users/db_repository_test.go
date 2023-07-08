@@ -234,13 +234,13 @@ func (m *mockQueryExecutor) RunQuery(qb db.QueryBuilder) error {
 	return m.runQueryErr
 }
 
-func (m *mockQueryExecutor) RunQueryAndScanSingleResult(qb db.QueryBuilder, scan db.ScanRow) error {
+func (m *mockQueryExecutor) RunQueryAndScanSingleResult(qb db.QueryBuilder, parser db.Parser) error {
 	m.runQueryAndScanSingleResultCalled++
 	m.queries = append(m.queries, qb)
 	return m.runQueryAndScanSingleResultErr
 }
 
-func (m *mockQueryExecutor) RunQueryAndScanAllResults(qb db.QueryBuilder, scan db.ScanRow) error {
+func (m *mockQueryExecutor) RunQueryAndScanAllResults(qb db.QueryBuilder, parser db.Parser) error {
 	m.runQueryAndScanAllResultsCalled++
 	m.queries = append(m.queries, qb)
 	return m.runQueryAndScanAllResultsErr

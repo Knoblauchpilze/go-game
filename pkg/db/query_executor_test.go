@@ -106,7 +106,7 @@ func TestQueryExecutor_RunQueryAndScanSingleResult(t *testing.T) {
 
 	qe := NewQueryExecutor(mdb)
 
-	err := qe.RunQueryAndScanSingleResult(mqb, emptyScanner)
+	err := qe.RunQueryAndScanSingleResult(mqb, &mockParser{})
 	assert.Nil(err)
 	assert.Equal(1, mdb.queryCalls)
 	assert.Equal(1, mr.singleValueCalled)
@@ -125,7 +125,7 @@ func TestQueryExecutor_RunQueryAndScanSingleResult_Error(t *testing.T) {
 
 	qe := NewQueryExecutor(mdb)
 
-	err := qe.RunQueryAndScanSingleResult(mqb, emptyScanner)
+	err := qe.RunQueryAndScanSingleResult(mqb, &mockParser{})
 	assert.Contains(err.Error(), "someError")
 }
 
@@ -142,7 +142,7 @@ func TestQueryExecutor_RunQueryAndScanSingleResult_ScanError(t *testing.T) {
 
 	qe := NewQueryExecutor(mdb)
 
-	err := qe.RunQueryAndScanSingleResult(mqb, emptyScanner)
+	err := qe.RunQueryAndScanSingleResult(mqb, &mockParser{})
 	assert.True(errors.IsErrorWithCode(err, errors.ErrDbCorruptedData))
 	cause := errors.Unwrap(err)
 	assert.Contains(cause.Error(), "someError")
@@ -160,7 +160,7 @@ func TestQueryExecutor_RunQueryAndScanAllResults(t *testing.T) {
 
 	qe := NewQueryExecutor(mdb)
 
-	err := qe.RunQueryAndScanAllResults(mqb, emptyScanner)
+	err := qe.RunQueryAndScanAllResults(mqb, &mockParser{})
 	assert.Nil(err)
 	assert.Equal(1, mdb.queryCalls)
 	assert.Equal(1, mr.allCalled)
@@ -179,7 +179,7 @@ func TestQueryExecutor_RunQueryAndScanAllResults_Error(t *testing.T) {
 
 	qe := NewQueryExecutor(mdb)
 
-	err := qe.RunQueryAndScanAllResults(mqb, emptyScanner)
+	err := qe.RunQueryAndScanAllResults(mqb, &mockParser{})
 	assert.Contains(err.Error(), "someError")
 }
 
@@ -196,7 +196,7 @@ func TestQueryExecutor_RunQueryAndScanAllResults_ScanError(t *testing.T) {
 
 	qe := NewQueryExecutor(mdb)
 
-	err := qe.RunQueryAndScanAllResults(mqb, emptyScanner)
+	err := qe.RunQueryAndScanAllResults(mqb, &mockParser{})
 	assert.True(errors.IsErrorWithCode(err, errors.ErrDbCorruptedData))
 	cause := errors.Unwrap(err)
 	assert.Contains(cause.Error(), "someError")
@@ -272,22 +272,18 @@ func (m *mockRows) Empty() bool {
 	return m.empty
 }
 
-func (m *mockRows) GetSingleValue(scanner ScanRow) error {
+func (m *mockRows) GetSingleValue(parser Parser) error {
 	m.singleValueCalled++
 	if m.getSingleValueScannable != nil {
-		m.singleValueScanErr = scanner(m.getSingleValueScannable)
+		m.singleValueScanErr = parser.Parse(m.getSingleValueScannable)
 	}
 	return m.getSingleValueErr
 }
 
-func (m *mockRows) GetAll(scanner ScanRow) error {
+func (m *mockRows) GetAll(parser Parser) error {
 	m.allCalled++
 	if m.getAllScannable != nil {
-		m.allScanErr = scanner(m.getAllScannable)
+		m.allScanErr = parser.Parse(m.getAllScannable)
 	}
 	return m.getAllErr
-}
-
-func emptyScanner(row Scannable) error {
-	return nil
 }

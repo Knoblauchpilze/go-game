@@ -50,168 +50,127 @@ func TestRows_Empty(t *testing.T) {
 func TestRows_GetSingleValue_InvalidPreconditions(t *testing.T) {
 	assert := assert.New(t)
 
-	calls := 0
-	scan := func(row Scannable) error {
-		calls++
-		return nil
-	}
+	mp := &mockParser{}
 
 	r := newRows(nil, fmt.Errorf("someError"))
-	err := r.GetSingleValue(scan)
+	err := r.GetSingleValue(mp)
 	assert.Equal("someError", err.Error())
-	assert.Equal(0, calls)
+	assert.Equal(0, mp.parseCalled)
 
 	r = newRows(nil, nil)
-	err = r.GetSingleValue(scan)
+	err = r.GetSingleValue(mp)
 	assert.True(errors.IsErrorWithCode(err, errors.ErrNoRowsReturnedForSqlQuery))
-	assert.Equal(0, calls)
+	assert.Equal(0, mp.parseCalled)
 }
 
 func TestRows_GetSingleValue(t *testing.T) {
 	assert := assert.New(t)
 
-	calls := 0
-	scan := func(row Scannable) error {
-		calls++
-		return nil
-	}
-
+	mp := &mockParser{}
 	m := &mockSqlRows{
 		numberOfRows: 1,
 	}
 	r := newRows(m, nil)
-	err := r.GetSingleValue(scan)
+	err := r.GetSingleValue(mp)
 	assert.Nil(err)
-	assert.Equal(1, calls)
+	assert.Equal(1, mp.parseCalled)
 }
 
 func TestRows_GetSingleValue_CallsClose(t *testing.T) {
 	assert := assert.New(t)
 
-	calls := 0
-	scan := func(row Scannable) error {
-		calls++
-		return nil
-	}
-
+	mp := &mockParser{}
 	m := &mockSqlRows{
 		numberOfRows: 1,
 	}
 	r := newRows(m, nil)
-	r.GetSingleValue(scan)
+	r.GetSingleValue(mp)
 	assert.Equal(1, m.closeCalls)
 }
 
 func TestRows_GetSingleValue_ScannerError(t *testing.T) {
 	assert := assert.New(t)
 
-	calls := 0
-	scan := func(row Scannable) error {
-		calls++
-		return fmt.Errorf("someError")
+	mp := &mockParser{
+		parseErr: fmt.Errorf("someError"),
 	}
 
 	m := &mockSqlRows{
 		numberOfRows: 1,
 	}
 	r := newRows(m, nil)
-	err := r.GetSingleValue(scan)
+	err := r.GetSingleValue(mp)
 	assert.True(errors.IsErrorWithCode(err, errors.ErrSqlRowParsingFailed))
 	cause := errors.Unwrap(err)
 	assert.Equal("someError", cause.Error())
-	assert.Equal(1, calls)
+	assert.Equal(1, mp.parseCalled)
 }
 
 func TestRows_GetSingleValue_WithMultipleValues(t *testing.T) {
 	assert := assert.New(t)
 
-	calls := 0
-	scan := func(row Scannable) error {
-		calls++
-		return nil
-	}
-
+	mp := &mockParser{}
 	m := &mockSqlRows{
 		numberOfRows: 2,
 	}
 	r := newRows(m, nil)
-	err := r.GetSingleValue(scan)
+	err := r.GetSingleValue(mp)
 	assert.True(errors.IsErrorWithCode(err, errors.ErrMultiValuedDbElement))
 }
 
 func TestRows_GetAll_InvalidPreconditions(t *testing.T) {
 	assert := assert.New(t)
 
-	calls := 0
-	scan := func(row Scannable) error {
-		calls++
-		return nil
-	}
-
+	mp := &mockParser{}
 	r := newRows(nil, fmt.Errorf("someError"))
-	err := r.GetAll(scan)
+	err := r.GetAll(mp)
 	assert.Equal("someError", err.Error())
-	assert.Equal(0, calls)
+	assert.Equal(0, mp.parseCalled)
 
 	r = newRows(nil, nil)
-	err = r.GetAll(scan)
+	err = r.GetAll(mp)
 	assert.True(errors.IsErrorWithCode(err, errors.ErrNoRowsReturnedForSqlQuery))
-	assert.Equal(0, calls)
+	assert.Equal(0, mp.parseCalled)
 }
 
 func TestRows_GetAll(t *testing.T) {
 	assert := assert.New(t)
 
-	calls := 0
-	scan := func(row Scannable) error {
-		calls++
-		return nil
-	}
-
+	mp := &mockParser{}
 	m := &mockSqlRows{
 		numberOfRows: 2,
 	}
 	r := newRows(m, nil)
-	err := r.GetAll(scan)
+	err := r.GetAll(mp)
 	assert.Nil(err)
-	assert.Equal(2, calls)
+	assert.Equal(2, mp.parseCalled)
 }
 
 func TestRows_GetAll_CallsClose(t *testing.T) {
 	assert := assert.New(t)
 
-	calls := 0
-	scan := func(row Scannable) error {
-		calls++
-		return nil
-	}
-
+	mp := &mockParser{}
 	m := &mockSqlRows{
 		numberOfRows: 2,
 	}
 	r := newRows(m, nil)
-	r.GetAll(scan)
+	r.GetAll(mp)
 	assert.Equal(1, m.closeCalls)
 }
 
 func TestRows_GetAll_ScannerError(t *testing.T) {
 	assert := assert.New(t)
 
-	calls := 0
-	scan := func(row Scannable) error {
-		calls++
-		return fmt.Errorf("someError")
-	}
-
+	mp := &mockParser{parseErr: fmt.Errorf("someError")}
 	m := &mockSqlRows{
 		numberOfRows: 2,
 	}
 	r := newRows(m, nil)
-	err := r.GetAll(scan)
+	err := r.GetAll(mp)
 	assert.True(errors.IsErrorWithCode(err, errors.ErrSqlRowParsingFailed))
 	cause := errors.Unwrap(err)
 	assert.Equal("someError", cause.Error())
-	assert.Equal(1, calls)
+	assert.Equal(1, mp.parseCalled)
 }
 
 type mockSqlRows struct {
@@ -233,4 +192,14 @@ func (m *mockSqlRows) Scan(dest ...interface{}) error {
 
 func (m *mockSqlRows) Close() {
 	m.closeCalls++
+}
+
+type mockParser struct {
+	parseCalled int
+	parseErr    error
+}
+
+func (m *mockParser) Parse(row Scannable) error {
+	m.parseCalled++
+	return m.parseErr
 }

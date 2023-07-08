@@ -10,15 +10,17 @@ type Rows interface {
 	Close()
 	Empty() bool
 
-	GetSingleValue(scanner ScanRow) error
-	GetAll(scanner ScanRow) error
+	GetSingleValue(parser Parser) error
+	GetAll(parser Parser) error
 }
 
 type Scannable interface {
 	Scan(dest ...interface{}) error
 }
 
-type ScanRow func(row Scannable) error
+type Parser interface {
+	Parse(row Scannable) error
+}
 
 type sqlRows interface {
 	Next() bool
@@ -59,14 +61,14 @@ func (r *rowsImpl) Empty() bool {
 	return r.rows == nil || !r.next
 }
 
-func (r *rowsImpl) GetSingleValue(scanner ScanRow) error {
+func (r *rowsImpl) GetSingleValue(parser Parser) error {
 	if err := r.assertValidStateOrReturnError(); err != nil {
 		return err
 	}
 
 	defer r.Close()
 
-	if err := scanner(r.rows); err != nil {
+	if err := parser.Parse(r.rows); err != nil {
 		return errors.WrapCode(err, errors.ErrSqlRowParsingFailed)
 	}
 
@@ -78,7 +80,7 @@ func (r *rowsImpl) GetSingleValue(scanner ScanRow) error {
 	return nil
 }
 
-func (r *rowsImpl) GetAll(scanner ScanRow) error {
+func (r *rowsImpl) GetAll(parser Parser) error {
 	if err := r.assertValidStateOrReturnError(); err != nil {
 		return err
 	}
@@ -86,7 +88,7 @@ func (r *rowsImpl) GetAll(scanner ScanRow) error {
 	defer r.Close()
 
 	for r.next {
-		if err := scanner(r.rows); err != nil {
+		if err := parser.Parse(r.rows); err != nil {
 			return errors.WrapCode(err, errors.ErrSqlRowParsingFailed)
 		}
 

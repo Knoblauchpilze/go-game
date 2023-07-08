@@ -4,8 +4,8 @@ import "github.com/KnoblauchPilze/go-game/pkg/errors"
 
 type QueryExecutor interface {
 	RunQuery(qb QueryBuilder) error
-	RunQueryAndScanSingleResult(qb QueryBuilder, scan ScanRow) error
-	RunQueryAndScanAllResults(qb QueryBuilder, scan ScanRow) error
+	RunQueryAndScanSingleResult(qb QueryBuilder, parser Parser) error
+	RunQueryAndScanAllResults(qb QueryBuilder, parser Parser) error
 }
 
 type queryExecutorImpl struct {
@@ -28,7 +28,7 @@ func (qe *queryExecutorImpl) RunQuery(qb QueryBuilder) error {
 	return nil
 }
 
-func (qe *queryExecutorImpl) RunQueryAndScanSingleResult(qb QueryBuilder, scan ScanRow) error {
+func (qe *queryExecutorImpl) RunQueryAndScanSingleResult(qb QueryBuilder, parser Parser) error {
 	rows, err := qe.runQueryAndReturnRows(qb)
 	if err != nil {
 		return err
@@ -36,14 +36,14 @@ func (qe *queryExecutorImpl) RunQueryAndScanSingleResult(qb QueryBuilder, scan S
 
 	defer rows.Close()
 
-	if err := rows.GetSingleValue(scan); err != nil {
+	if err := rows.GetSingleValue(parser); err != nil {
 		return errors.WrapCode(err, errors.ErrDbCorruptedData)
 	}
 
 	return nil
 }
 
-func (qe *queryExecutorImpl) RunQueryAndScanAllResults(qb QueryBuilder, scan ScanRow) error {
+func (qe *queryExecutorImpl) RunQueryAndScanAllResults(qb QueryBuilder, parser Parser) error {
 	rows, err := qe.runQueryAndReturnRows(qb)
 	if err != nil {
 		return err
@@ -51,7 +51,7 @@ func (qe *queryExecutorImpl) RunQueryAndScanAllResults(qb QueryBuilder, scan Sca
 
 	defer rows.Close()
 
-	if err := rows.GetAll(scan); err != nil {
+	if err := rows.GetAll(parser); err != nil {
 		return errors.WrapCode(err, errors.ErrDbCorruptedData)
 	}
 
