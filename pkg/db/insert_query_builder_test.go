@@ -85,7 +85,7 @@ func TestInsertQueryBuilder_Build(t *testing.T) {
 	query, err := b.Build()
 	assert.Nil(err)
 	assert.True(query.Valid())
-	assert.Equal("INSERT INTO table (column) VALUES (prop)", query.ToSql())
+	assert.Equal("INSERT INTO table (column) VALUES ('prop')", query.ToSql())
 }
 
 func TestInsertQueryBuilder_Build_MultiColumns(t *testing.T) {
@@ -99,7 +99,7 @@ func TestInsertQueryBuilder_Build_MultiColumns(t *testing.T) {
 	query, err := b.Build()
 	assert.Nil(err)
 	assert.True(query.Valid())
-	assert.Equal("INSERT INTO table (column1, column2) VALUES (prop1, prop2)", query.ToSql())
+	assert.Equal("INSERT INTO table (column1, column2) VALUES ('prop1', 'prop2')", query.ToSql())
 }
 
 func TestInsertQueryBuilder_Build_ArgWithError(t *testing.T) {

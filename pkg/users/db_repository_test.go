@@ -99,7 +99,7 @@ func TestDbRepository_CreateUser(t *testing.T) {
 
 	assert.Equal(1, m.queryCalls)
 	assert.True(m.queries[0].Valid())
-	testUserInsertQuery := "INSERT INTO users (id, mail, name, password) VALUES (\"08ce96a3-3430-48a8-a3b2-b1c987a207ca\", some@mail, someName, somePassword)"
+	testUserInsertQuery := "INSERT INTO users (id, mail, name, password) VALUES ('08ce96a3-3430-48a8-a3b2-b1c987a207ca', 'some@mail', 'someName', 'somePassword')"
 	assert.Equal(testUserInsertQuery, m.queries[0].ToSql())
 
 	assert.Equal(1, r.closeCalled)
