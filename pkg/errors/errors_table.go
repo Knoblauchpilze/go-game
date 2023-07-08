@@ -9,6 +9,8 @@ const (
 	ErrInvalidPassword
 	ErrUserAlreadyExists
 	ErrUserCreationFailure
+	ErrUserGetFailure
+	ErrUserDeletionFailure
 	ErrNoSuchUser
 
 	ErrFailedToGetBody
@@ -61,7 +63,9 @@ var errorsCodeToMessage = map[ErrorCode]string{
 	ErrInvalidUserName:     "user name is invalid",
 	ErrInvalidPassword:     "password is invalid",
 	ErrUserAlreadyExists:   "user already exists",
-	ErrUserCreationFailure: "internal error while creating user",
+	ErrUserCreationFailure: "error while creating user",
+	ErrUserGetFailure:      "error while getting user",
+	ErrUserDeletionFailure: "error while deleting user",
 	ErrNoSuchUser:          "no such user",
 
 	ErrFailedToGetBody:   "failed to get request body",

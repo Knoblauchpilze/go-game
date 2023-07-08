@@ -7,7 +7,7 @@ import (
 )
 
 type userDbRepo struct {
-	db db.Database
+	qe db.QueryExecutor
 }
 
 const userTableName = "users"
@@ -23,9 +23,9 @@ var selectQueryBuilderFunc = db.NewSelectQueryBuilder
 var inFilterBuilderFunc = db.NewInFilterBuilder
 var deleteQueryBuilderFunc = db.NewDeleteQueryBuilder
 
-func NewDbRepository(db db.Database) Repository {
+func NewDbRepository(qe db.QueryExecutor) Repository {
 	return &userDbRepo{
-		db: db,
+		qe: qe,
 	}
 }
 
@@ -46,16 +46,9 @@ func (repo *userDbRepo) Create(user User) (uuid.UUID, error) {
 
 	qb.SetVerbose(true)
 
-	query, err := qb.Build()
-	if err != nil {
-		return out, errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
-	}
-
-	rows := repo.db.Query(query)
-	if err := rows.Err(); err != nil {
+	if err := repo.qe.RunQuery(qb); err != nil {
 		return out, errors.WrapCode(err, errors.ErrUserCreationFailure)
 	}
-	rows.Close()
 
 	return out, nil
 }
@@ -85,24 +78,12 @@ func (repo *userDbRepo) Get(id uuid.UUID) (User, error) {
 
 	qb.SetVerbose(true)
 
-	query, err := qb.Build()
-	if err != nil {
-		return user, errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
-	}
-
-	rows := repo.db.Query(query)
-	if err := rows.Err(); err != nil {
-		return user, errors.WrapCode(err, errors.ErrDbRequestFailed)
-	}
-
-	defer rows.Close()
-
 	scanner := func(row db.Scannable) error {
 		return row.Scan(&user.Id, &user.Mail, &user.Name, &user.Password, &user.CreatedAt)
 	}
 
-	if err := rows.GetSingleValue(scanner); err != nil {
-		return user, errors.WrapCode(err, errors.ErrDbCorruptedData)
+	if err := repo.qe.RunQueryAndScanSingleResult(qb, scanner); err != nil {
+		return user, errors.WrapCode(err, errors.ErrUserGetFailure)
 	}
 
 	return user, nil
@@ -129,16 +110,9 @@ func (repo *userDbRepo) Delete(id uuid.UUID) error {
 
 	qb.SetVerbose(true)
 
-	query, err := qb.Build()
-	if err != nil {
-		return errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
+	if err := repo.qe.RunQuery(qb); err != nil {
+		return errors.WrapCode(err, errors.ErrUserDeletionFailure)
 	}
-
-	rows := repo.db.Query(query)
-	if err := rows.Err(); err != nil {
-		return errors.WrapCode(err, errors.ErrDbRequestFailed)
-	}
-	rows.Close()
 
 	return nil
 }
@@ -153,18 +127,6 @@ func (repo *userDbRepo) GetAll() ([]uuid.UUID, error) {
 
 	qb.SetVerbose(true)
 
-	query, err := qb.Build()
-	if err != nil {
-		return users, errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
-	}
-
-	rows := repo.db.Query(query)
-	if err := rows.Err(); err != nil {
-		return users, errors.WrapCode(err, errors.ErrDbRequestFailed)
-	}
-
-	defer rows.Close()
-
 	scanner := func(row db.Scannable) error {
 		var id uuid.UUID
 		if err := row.Scan(&id); err != nil {
@@ -175,8 +137,8 @@ func (repo *userDbRepo) GetAll() ([]uuid.UUID, error) {
 		return nil
 	}
 
-	if err := rows.GetAll(scanner); err != nil {
-		return users, errors.WrapCode(err, errors.ErrDbCorruptedData)
+	if err := repo.qe.RunQueryAndScanAllResults(qb, scanner); err != nil {
+		return users, errors.WrapCode(err, errors.ErrUserGetFailure)
 	}
 
 	return users, nil

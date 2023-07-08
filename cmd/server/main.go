@@ -26,15 +26,16 @@ func main() {
 	})
 
 	port := getServerPortFromArgs()
-	db := createDb()
-	repo := users.NewDbRepository(db)
+	database := createDb()
+	qe := db.NewQueryExecutor(database)
+	repo := users.NewDbRepository(qe)
 	r := createServerRouter(repo)
 
-	if err := connectToDbAndInstallCleanUp(db); err != nil {
+	if err := connectToDbAndInstallCleanUp(database); err != nil {
 		logger.Fatalf("failed to connect to the db (err: %v)", err)
 		return
 	}
-	defer db.Disconnect()
+	defer database.Disconnect()
 
 	logger.Infof("server pid: %d", os.Getpid())
 	logger.Infof("starting server on port %d...", port)
