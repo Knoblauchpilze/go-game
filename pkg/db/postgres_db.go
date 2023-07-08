@@ -66,6 +66,8 @@ func (db *postgresDb) Disconnect() error {
 	db.pool.Close()
 	db.pool = nil
 
+	logger.Infof("connection to %s closed", db.config)
+
 	return nil
 }
 

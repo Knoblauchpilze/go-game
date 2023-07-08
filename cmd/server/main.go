@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 
 	"github.com/KnoblauchPilze/go-game/cmd/server/routes"
 	"github.com/KnoblauchPilze/go-game/pkg/db"
@@ -15,13 +17,32 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const defaultServerPort = 3000
+
 func main() {
 	logger.Configure(logger.Configuration{
 		Service: "server",
 		Level:   logrus.DebugLevel,
 	})
 
-	port := 3000
+	port := getServerPortFromArgs()
+	db := createDb()
+	repo := users.NewDbRepository(db)
+	r := createServerRouter(repo)
+
+	if err := connectToDbAndInstallCleanUp(db); err != nil {
+		logger.Fatalf("failed to connect to the db (err: %v)", err)
+		return
+	}
+	defer db.Disconnect()
+
+	logger.Infof("server pid: %d", os.Getpid())
+	logger.Infof("starting server on port %d...", port)
+	http.ListenAndServe(fmt.Sprintf(":%d", port), r)
+}
+
+func getServerPortFromArgs() int {
+	port := defaultServerPort
 	if len(os.Args) > 1 {
 		if maybePort, err := strconv.Atoi(os.Args[1]); err != nil {
 			logger.Warnf("ignoring provided port \"%s\" (err: %v)", os.Args[1], err)
@@ -32,12 +53,10 @@ func main() {
 		}
 	}
 
-	r := chi.NewRouter()
+	return port
+}
 
-	r.Use(middleware.RequestLogger(routes.TimingLogFormatter{}))
-	r.Use(middleware.Recoverer)
-
-	// repo := users.NewMemoryRepository()
+func createDb() db.Database {
 	dbConf := db.NewConfig()
 	dbConf.DbHost = "localhost"
 	dbConf.DbPort = uint16(5500)
@@ -46,11 +65,32 @@ func main() {
 	dbConf.DbPassword = "Ww76hQWbbt7zi2ItM6cNo4YYT"
 	dbConf.DbConnectionsPoolSize = 2
 
-	db := db.NewPostgresDatabase(dbConf)
-	repo := users.NewDbRepository(db)
+	return db.NewPostgresDatabase(dbConf)
+}
 
+func createServerRouter(repo users.Repository) *chi.Mux {
+	r := chi.NewRouter()
+
+	r.Use(middleware.RequestLogger(routes.TimingLogFormatter{}))
+	r.Use(middleware.Recoverer)
 	r.Mount("/users", routes.UsersRouter(repo))
 
-	logger.Infof("starting server on port %d...", port)
-	http.ListenAndServe(fmt.Sprintf(":%d", port), r)
+	return r
+}
+
+func connectToDbAndInstallCleanUp(db db.Database) error {
+	if err := db.Connect(); err != nil {
+		return err
+	}
+
+	interruptChannel := make(chan os.Signal, 2)
+	signal.Notify(interruptChannel, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-interruptChannel
+
+		db.Disconnect()
+		os.Exit(1)
+	}()
+
+	return nil
 }
