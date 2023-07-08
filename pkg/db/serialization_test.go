@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,6 +16,16 @@ func TestArgToStr_String(t *testing.T) {
 	out, err := argToStr(arg)
 	assert.Nil(err)
 	assert.Equal("hello", out)
+}
+
+func TestArgToStr_Uuid(t *testing.T) {
+	assert := assert.New(t)
+
+	arg := uuid.New()
+
+	out, err := argToStr(arg)
+	assert.Nil(err)
+	assert.Equal(arg.String(), out)
 }
 
 type mockConvertible struct {

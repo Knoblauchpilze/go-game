@@ -22,7 +22,7 @@ const defaultServerPort = 3000
 func main() {
 	logger.Configure(logger.Configuration{
 		Service: "server",
-		Level:   logrus.DebugLevel,
+		Level:   logrus.TraceLevel,
 	})
 
 	port := getServerPortFromArgs()
@@ -83,6 +83,7 @@ func connectToDbAndInstallCleanUp(db db.Database) error {
 		return err
 	}
 
+	// https://stackoverflow.com/questions/11268943/is-it-possible-to-capture-a-ctrlc-signal-sigint-and-run-a-cleanup-function-i
 	interruptChannel := make(chan os.Signal, 2)
 	signal.Notify(interruptChannel, os.Interrupt, syscall.SIGTERM)
 	go func() {

@@ -2,6 +2,8 @@ package db
 
 import (
 	"encoding/json"
+
+	"github.com/google/uuid"
 )
 
 type Convertible interface {
@@ -20,6 +22,8 @@ func argToStr(arg interface{}) (string, error) {
 		}
 	} else if str, ok := arg.(string); ok {
 		out = str
+	} else if id, ok := arg.(uuid.UUID); ok {
+		out = id.String()
 	} else {
 		raw, err = json.Marshal(arg)
 		if err == nil {

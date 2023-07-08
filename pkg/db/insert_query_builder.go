@@ -108,7 +108,7 @@ func (b *insertQueryBuilder) valuesToStr() (string, error) {
 			return "", err
 		}
 
-		values = append(values, arg)
+		values = append(values, fmt.Sprintf("'%s'", arg))
 	}
 
 	return strings.Join(values, ", "), nil
