@@ -90,3 +90,28 @@ func TestArgToStr_UnmarshalableConvertible(t *testing.T) {
 	_, err := argToStr(arg)
 	assert.Contains(err.Error(), "someError")
 }
+
+func TestSqlPropAsUpdateToStr(t *testing.T) {
+	assert := assert.New(t)
+
+	update := sqlProp{
+		column: "column",
+		value:  32,
+	}
+
+	out, err := sqlPropAsUpdateToStr(update)
+	assert.Nil(err)
+	assert.Equal("column = '32'", out)
+}
+
+func TestSqlPropAsUpdateToStr_Unmarshalable(t *testing.T) {
+	assert := assert.New(t)
+
+	update := sqlProp{
+		column: "column",
+		value:  mockUnmarshalable{},
+	}
+
+	_, err := sqlPropAsUpdateToStr(update)
+	assert.Contains(err.Error(), "someError")
+}

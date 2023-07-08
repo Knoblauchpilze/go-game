@@ -22,11 +22,6 @@ type insertQueryBuilder struct {
 	verbose bool
 }
 
-type sqlProp struct {
-	column string
-	value  interface{}
-}
-
 func NewInsertQueryBuilder() InsertQueryBuilder {
 	return &insertQueryBuilder{
 		columns: make(map[string]bool),

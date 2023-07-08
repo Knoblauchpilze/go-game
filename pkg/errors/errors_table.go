@@ -47,6 +47,7 @@ const (
 	ErrInvalidSqlColumn
 	ErrDuplicatedSqlColumn
 	ErrNoColumnInSqlInsertQuery
+	ErrNoColumnInSqlUpdateQuery
 
 	ErrDbCorruptedData
 	ErrDbRequestCreationFailed
@@ -104,7 +105,8 @@ var errorsCodeToMessage = map[ErrorCode]string{
 	ErrNoValuesInSqlComparison:   "no comparison values set for sql query",
 	ErrInvalidSqlColumn:          "invalid column for sql query",
 	ErrDuplicatedSqlColumn:       "duplicated column for sql query",
-	ErrNoColumnInSqlInsertQuery:  "no columns set for sql query",
+	ErrNoColumnInSqlInsertQuery:  "no column set for sql query",
+	ErrNoColumnInSqlUpdateQuery:  "no column set for sql query",
 
 	ErrDbCorruptedData:             "failed to interpret data from database",
 	ErrDbRequestCreationFailed:     "failed to create database request",

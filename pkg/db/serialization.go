@@ -2,6 +2,7 @@ package db
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -32,4 +33,19 @@ func argToStr(arg interface{}) (string, error) {
 	}
 
 	return out, err
+}
+
+type sqlProp struct {
+	column string
+	value  interface{}
+}
+
+func sqlPropAsUpdateToStr(update sqlProp) (string, error) {
+	arg, err := argToStr(update.value)
+	if err != nil {
+		return "", err
+	}
+
+	out := fmt.Sprintf("%s = '%s'", update.column, arg)
+	return out, nil
 }
