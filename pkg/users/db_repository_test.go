@@ -211,9 +211,102 @@ func TestDbRepository_GetUser(t *testing.T) {
 	assert.Nil(err)
 
 	assert.Equal(1, m.queryCalls)
+	assert.Equal(1, r.singleValueCalled)
 	assert.True(m.queries[0].Valid())
 	testUserSelectQuery := "SELECT id, mail, name, password, created_at FROM users WHERE id in ('08ce96a3-3430-48a8-a3b2-b1c987a207ca')"
 	assert.Equal(testUserSelectQuery, m.queries[0].ToSql())
+
+	assert.Equal(1, r.closeCalled)
+}
+
+func TestDbRepository_GetAll_QueryBuildError(t *testing.T) {
+	assert := assert.New(t)
+	t.Cleanup(resetQueryBuilderFuncs)
+
+	m := &mockDb{
+		rows: &mockRows{},
+	}
+	selectQueryBuilderFunc = func() db.SelectQueryBuilder {
+		return mockSelectQueryBuilder{
+			buildErr: fmt.Errorf("someError"),
+		}
+	}
+	repo := NewDbRepository(m)
+
+	_, err := repo.GetAll()
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestCreationFailed))
+	cause := errors.Unwrap(err)
+	assert.Equal("someError", cause.Error())
+}
+
+func TestDbRepository_GetAll_DbQueryError(t *testing.T) {
+	assert := assert.New(t)
+
+	m := &mockDb{
+		rows: &mockRows{
+			err: fmt.Errorf("someError"),
+		},
+	}
+	repo := NewDbRepository(m)
+
+	_, err := repo.GetAll()
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestFailed))
+	cause := errors.Unwrap(err)
+	assert.Equal("someError", cause.Error())
+}
+
+func TestDbRepository_GetAll_RowsFailure(t *testing.T) {
+	assert := assert.New(t)
+
+	r := &mockRows{
+		getAllErr: fmt.Errorf("someError"),
+	}
+	m := &mockDb{
+		rows: r,
+	}
+	repo := NewDbRepository(m)
+
+	_, err := repo.GetAll()
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbCorruptedData))
+	cause := errors.Unwrap(err)
+	assert.Equal("someError", cause.Error())
+}
+
+func TestDbRepository_GetAll_Scanner(t *testing.T) {
+	assert := assert.New(t)
+
+	s := &mockScannable{}
+	r := &mockRows{
+		getAllScannable: s,
+	}
+	m := &mockDb{
+		rows: r,
+	}
+	repo := NewDbRepository(m)
+
+	_, err := repo.GetAll()
+	assert.Nil(err)
+
+	assert.Equal(1, s.scanCalled)
+}
+
+func TestDbRepository_GetAll(t *testing.T) {
+	assert := assert.New(t)
+
+	r := &mockRows{}
+	m := &mockDb{
+		rows: r,
+	}
+	repo := NewDbRepository(m)
+
+	_, err := repo.GetAll()
+	assert.Nil(err)
+
+	assert.Equal(1, m.queryCalls)
+	assert.Equal(1, r.allCalled)
+	assert.True(m.queries[0].Valid())
+	testUsersSelectQuery := "SELECT id FROM users"
+	assert.Equal(testUsersSelectQuery, m.queries[0].ToSql())
 
 	assert.Equal(1, r.closeCalled)
 }

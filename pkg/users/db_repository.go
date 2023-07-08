@@ -118,7 +118,7 @@ func (repo *userDbRepo) Delete(id uuid.UUID) error {
 func (repo *userDbRepo) GetAll() ([]uuid.UUID, error) {
 	var users []uuid.UUID
 
-	qb := db.NewSelectQueryBuilder()
+	qb := selectQueryBuilderFunc()
 	qb.SetTable("users")
 
 	qb.AddProp(userIdColumnName)
@@ -127,12 +127,12 @@ func (repo *userDbRepo) GetAll() ([]uuid.UUID, error) {
 
 	query, err := qb.Build()
 	if err != nil {
-		return users, err
+		return users, errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
 	}
 
 	rows := repo.db.Query(query)
 	if err := rows.Err(); err != nil {
-		return users, errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
+		return users, errors.WrapCode(err, errors.ErrDbRequestFailed)
 	}
 
 	defer rows.Close()
