@@ -1,15 +1,18 @@
 package users
 
 import (
+	"time"
+
 	"github.com/KnoblauchPilze/go-game/pkg/errors"
 	"github.com/google/uuid"
 )
 
 type User struct {
-	Id       uuid.UUID
-	Mail     string
-	Name     string
-	Password string
+	Id        uuid.UUID
+	Mail      string
+	Name      string
+	Password  string
+	CreatedAt time.Time
 }
 
 func (u User) validate() error {

@@ -19,7 +19,6 @@ func UsersRouter(repo users.Repository) http.Handler {
 
 		r.Route("/{user}", func(r chi.Router) {
 			r.Get("/", getUser(repo))
-			r.Patch("/", patchUser(repo))
 			r.Delete("/", deleteUser(repo))
 		})
 	})
@@ -82,39 +81,6 @@ func getUser(repo users.Repository) http.HandlerFunc {
 		}
 
 		user, err := repo.Get(id)
-		if err != nil {
-			reqData.FailWithErrorAndCode(err, http.StatusBadRequest, w)
-			return
-		}
-
-		reqData.WriteDetails(user, w)
-	}
-}
-
-func patchUser(repo users.Repository) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		reqData, ok := middlewares.GetRequestDataFromContextOrFail(w, r)
-		if !ok {
-			return
-		}
-
-		var err error
-		var dto dtos.UserDto
-		if dto, err = getUserDtoFromRequest(r); err != nil {
-			reqData.FailWithErrorAndCode(err, http.StatusBadRequest, w)
-			return
-		}
-
-		id, err := getUserIdFromHttpRequest(r)
-		if err != nil {
-			reqData.FailWithErrorAndCode(err, http.StatusBadRequest, w)
-			return
-		}
-
-		patch := dto.Convert()
-		patch.Id = id
-
-		user, err := repo.Patch(id, patch)
 		if err != nil {
 			reqData.FailWithErrorAndCode(err, http.StatusBadRequest, w)
 			return
