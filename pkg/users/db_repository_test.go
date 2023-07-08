@@ -290,6 +290,26 @@ func TestDbRepository_GetAll_Scanner(t *testing.T) {
 	assert.Equal(1, s.scanCalled)
 }
 
+func TestDbRepository_GetAll_ScannerError(t *testing.T) {
+	assert := assert.New(t)
+
+	s := &mockScannable{
+		scanErr: fmt.Errorf("someError"),
+	}
+	r := &mockRows{
+		getAllScannable: s,
+	}
+	m := &mockDb{
+		rows: r,
+	}
+	repo := NewDbRepository(m)
+
+	repo.GetAll()
+
+	assert.Equal("someError", r.allScanErr.Error())
+	assert.Equal(1, s.scanCalled)
+}
+
 func TestDbRepository_GetAll(t *testing.T) {
 	assert := assert.New(t)
 
@@ -357,10 +377,12 @@ type mockRows struct {
 
 	singleValueCalled       int
 	getSingleValueScannable db.Scannable
+	singleValueScanErr      error
 	getSingleValueErr       error
 
 	allCalled       int
 	getAllScannable db.Scannable
+	allScanErr      error
 	getAllErr       error
 }
 
@@ -379,7 +401,7 @@ func (m *mockRows) Empty() bool {
 func (m *mockRows) GetSingleValue(scanner db.ScanRow) error {
 	m.singleValueCalled++
 	if m.getSingleValueScannable != nil {
-		scanner(m.getSingleValueScannable)
+		m.singleValueScanErr = scanner(m.getSingleValueScannable)
 	}
 	return m.getSingleValueErr
 }
@@ -387,7 +409,7 @@ func (m *mockRows) GetSingleValue(scanner db.ScanRow) error {
 func (m *mockRows) GetAll(scanner db.ScanRow) error {
 	m.allCalled++
 	if m.getAllScannable != nil {
-		scanner(m.getAllScannable)
+		m.allScanErr = scanner(m.getAllScannable)
 	}
 	return m.getAllErr
 }
