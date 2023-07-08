@@ -285,13 +285,17 @@ func (m *mockRows) Empty() bool {
 
 func (m *mockRows) GetSingleValue(scanner db.ScanRow) error {
 	m.singleValueCalled++
-	scanner(m.getSingleValueScannable)
+	if m.getSingleValueScannable != nil {
+		scanner(m.getSingleValueScannable)
+	}
 	return m.getSingleValueErr
 }
 
 func (m *mockRows) GetAll(scanner db.ScanRow) error {
 	m.allCalled++
-	scanner(m.getAllScannable)
+	if m.getAllScannable != nil {
+		scanner(m.getAllScannable)
+	}
 	return m.getAllErr
 }
 
