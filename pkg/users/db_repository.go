@@ -30,10 +30,10 @@ func NewDbRepository(qe db.QueryExecutor) Repository {
 }
 
 func (repo *userDbRepo) Create(user User) (uuid.UUID, error) {
-	if err := user.validate(); err != nil {
-		return uuid.UUID{}, err
-	}
 	out := user.Id
+	if err := user.validate(); err != nil {
+		return out, err
+	}
 
 	qb := insertQueryBuilderFunc()
 
@@ -54,8 +54,6 @@ func (repo *userDbRepo) Create(user User) (uuid.UUID, error) {
 }
 
 func (repo *userDbRepo) Get(id uuid.UUID) (User, error) {
-	var user User
-
 	qb := selectQueryBuilderFunc()
 
 	qb.SetTable(userTableName)
@@ -71,7 +69,7 @@ func (repo *userDbRepo) Get(id uuid.UUID) (User, error) {
 	fb.AddValue(id)
 	f, err := fb.Build()
 	if err != nil {
-		return user, errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
+		return User{}, errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
 	}
 
 	qb.SetFilter(f)
@@ -80,7 +78,7 @@ func (repo *userDbRepo) Get(id uuid.UUID) (User, error) {
 
 	scanner := &userRowParser{}
 	if err := repo.qe.RunQueryAndScanSingleResult(qb, scanner); err != nil {
-		return user, errors.WrapCode(err, errors.ErrUserGetFailure)
+		return User{}, errors.WrapCode(err, errors.ErrUserGetFailure)
 	}
 
 	return scanner.user, nil
@@ -111,8 +109,6 @@ func (repo *userDbRepo) Delete(id uuid.UUID) error {
 }
 
 func (repo *userDbRepo) GetAll() ([]uuid.UUID, error) {
-	var users []uuid.UUID
-
 	qb := selectQueryBuilderFunc()
 	qb.SetTable("users")
 
@@ -122,7 +118,7 @@ func (repo *userDbRepo) GetAll() ([]uuid.UUID, error) {
 
 	scanner := &userIdsParser{}
 	if err := repo.qe.RunQueryAndScanAllResults(qb, scanner); err != nil {
-		return users, errors.WrapCode(err, errors.ErrUserGetFailure)
+		return []uuid.UUID{}, errors.WrapCode(err, errors.ErrUserGetFailure)
 	}
 
 	return scanner.ids, nil
