@@ -190,11 +190,15 @@ func TestDbRepository_GetAll_QueryExecutorError(t *testing.T) {
 func TestDbRepository_GetAll(t *testing.T) {
 	assert := assert.New(t)
 
-	mqe := &mockQueryExecutor{}
+	mqe := &mockQueryExecutor{
+		result:  2,
+		scanner: &mockScannable{},
+	}
 	repo := NewDbRepository(mqe)
 
-	_, err := repo.GetAll()
+	out, err := repo.GetAll()
 	assert.Nil(err)
+	assert.Equal(2, len(out))
 	assert.Equal(1, mqe.runQueryAndScanAllResultsCalled)
 	assert.Equal(1, len(mqe.queries))
 
@@ -221,24 +225,42 @@ type mockQueryExecutor struct {
 	runQueryAndScanAllResultsCalled int
 	runQueryAndScanAllResultsErr    error
 
+	result  int
+	scanner *mockScannable
+
 	queries []db.QueryBuilder
 }
 
 func (m *mockQueryExecutor) RunQuery(qb db.QueryBuilder) error {
 	m.runQueryCalled++
 	m.queries = append(m.queries, qb)
+
 	return m.runQueryErr
 }
 
 func (m *mockQueryExecutor) RunQueryAndScanSingleResult(qb db.QueryBuilder, parser db.RowParser) error {
 	m.runQueryAndScanSingleResultCalled++
 	m.queries = append(m.queries, qb)
+
+	if m.scanner != nil && m.result > 0 {
+		for id := 0; id < m.result; id++ {
+			parser.ScanRow(m.scanner)
+		}
+	}
+
 	return m.runQueryAndScanSingleResultErr
 }
 
 func (m *mockQueryExecutor) RunQueryAndScanAllResults(qb db.QueryBuilder, parser db.RowParser) error {
 	m.runQueryAndScanAllResultsCalled++
 	m.queries = append(m.queries, qb)
+
+	if m.scanner != nil && m.result > 0 {
+		for id := 0; id < m.result; id++ {
+			parser.ScanRow(m.scanner)
+		}
+	}
+
 	return m.runQueryAndScanAllResultsErr
 }
 
