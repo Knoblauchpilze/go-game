@@ -10,6 +10,7 @@ install:
 	@cd cmd/create-user && make install
 	@cd cmd/get-user && make install
 	@cd cmd/delete-user && make install
+	@cd cmd/server && make install
 	@echo "$(COLOR_HIGHLIGHT_GREEN)Success!$(COLOR_CLEAR)"
 
 setup:
@@ -23,6 +24,7 @@ clean:
 	@cd cmd/create-user && make clean
 	@cd cmd/get-user && make clean
 	@cd cmd/delete-user && make clean
+	@cd cmd/server && make clean
 	@echo "$(COLOR_HIGHLIGHT_GREEN)Success!$(COLOR_CLEAR)"
 
 # https://stackoverflow.com/questions/3931741/why-does-make-think-the-target-is-up-to-date
