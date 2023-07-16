@@ -176,7 +176,7 @@ url := fmt.Sprintf("%s/users", serverUrl)
 
 rb := connection.NewHttpPostRequestBuilder()
 rb.SetUrl(url)
-rb.SetBody("application/json", in)
+rb.SetBody("application/json", someInterfaceToMarshalForTheBody)
 
 req, err := rb.Build()
 if err != nil {
@@ -217,8 +217,6 @@ qb.SetTable("table")
 
 qb.AddProp("column1")
 qb.AddProp("column2")
-
-qb.SetFilter(f)
 
 q, err := qb.Build()
 if err != nil {
