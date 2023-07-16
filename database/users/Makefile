@@ -1,4 +1,5 @@
 # Default variables
+CONFIG_FOLDER ?= users
 DB_NAME ?= user_service_db
 DB_HOST ?= localhost
 DB_PORT ?= 5500
@@ -6,45 +7,53 @@ DB_USER ?= user_service_administrator
 DB_PASSWORD ?= Ww76hQWbbt7zi2ItM6cNo4YYT
 MIGRATION_STEPS ?= 1
 
-# Target allowing to build the docker image for the db.
+# Generate the connection yml file for this db
+setup:
+	mkdir -p ../../configs/${CONFIG_FOLDER}
+	cp ../../configs/db-template-dev.yml ../../configs/${CONFIG_FOLDER}/db-dev.yml
+	sed -i "s/DB_NAME/${DB_NAME}/g" ../../configs/${CONFIG_FOLDER}/db-dev.yml
+	sed -i "s/DB_USER/${DB_USER}/g" ../../configs/${CONFIG_FOLDER}/db-dev.yml
+	sed -i "s/DB_PASSWORD/${DB_PASSWORD}/g" ../../configs/${CONFIG_FOLDER}/db-dev.yml
+
+# Build the docker image for the db.
 docker_db:
 	docker build -t user_service_db_image .
 
-# Target allowing to remove any existing docker image of the db.
+# Remove existing docker image of the db.
 remove_db: stop_db
 	docker rm user_service_db_container
 	docker image rm user_service_db_image
 
-# Target allowing to create the docker image for the db.
+# Start of the (non existing) docker image for the db.
 create_db:
 	docker run -d --name user_service_db_container -p ${DB_PORT}:5432 user_service_db_image
 
-# Target allowing to start the docker image for the db.
+# Start the (existing) docker image for the db.
 start_db:
 	docker start user_service_db_container
 
-# Target allowing to stop the docker image fot the db.
+# Stop the (running) docker image fot the db.
 stop_db:
 	docker stop user_service_db_container
 
-# Target allowing to connect to the db in the image.
+# Connect to the db in the docker image.
 connect:
 	psql -U ${DB_USER} -d ${DB_NAME} -h ${DB_HOST} -p ${DB_PORT}
 
-# Target allowing to migrate the db to latest defined step.
+# Apply the next migration to the db.
 .PHONY: migrate
 migrate:
 	migrate -path ${PWD}/migrations -database postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable up
 	# Target allowing to migrate the db to latest defined step.
 
-# Target allowing to migrate the db one step further.
+# Apply the next MIGRATION_STEPS migration(s) to the db.
 migrateO:
 	migrate -path ${PWD}/migrations -database postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable up ${MIGRATION_STEPS}
 
-# Target allowing to migrate the db to initial state.
+# Revert all migrations of the db.
 demigrate:
 	migrate -path ${PWD}/migrations -database postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable down
 
-# Demigrate only the last step of the DB creation.
+# Revert the previous MIGRATION_STEPS migration(s) of the db.
 demigrateO:
 	migrate -path ${PWD}/migrations -database postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable down ${MIGRATION_STEPS}
