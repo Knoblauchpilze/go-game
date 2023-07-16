@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 
 	"github.com/KnoblauchPilze/go-game/cmd/server/routes"
@@ -15,6 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 const defaultServerPort = 3000
@@ -25,7 +25,12 @@ func main() {
 		Level:   logrus.TraceLevel,
 	})
 
-	port := getServerPortFromArgs()
+	if err := loadConfiguration(); err != nil {
+		logger.Fatalf("failed to load configuration (err: %v)", err)
+		return
+	}
+
+	port := viper.GetUint16("Server.Port")
 	database := createDb()
 	qe := db.NewQueryExecutor(database)
 	repo := users.NewDbRepository(qe)
@@ -42,29 +47,37 @@ func main() {
 	http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 }
 
-func getServerPortFromArgs() int {
-	port := defaultServerPort
-	if len(os.Args) > 1 {
-		if maybePort, err := strconv.Atoi(os.Args[1]); err != nil {
-			logger.Warnf("ignoring provided port \"%s\" (err: %v)", os.Args[1], err)
-		} else if maybePort <= 0 || maybePort > 65535 {
-			logger.Warnf("ignoring provided port \"%d\" (err: not in range ]0; 65535])", maybePort)
-		} else {
-			port = maybePort
-		}
+func loadConfiguration() error {
+	// https://github.com/spf13/viper#reading-config-files
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("../../configs")
+	viper.AddConfigPath("../../configs/users")
+
+	// https://github.com/spf13/viper#establishing-defaults
+	viper.SetDefault("Server.Port", defaultServerPort)
+
+	viper.SetConfigName("server-dev")
+	if err := viper.ReadInConfig(); err != nil {
+		return err
 	}
 
-	return port
+	// https://stackoverflow.com/questions/47185318/multiple-config-files-with-go-viper
+	viper.SetConfigName("db-dev")
+	if err := viper.MergeInConfig(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func createDb() db.Database {
 	dbConf := db.NewConfig()
-	dbConf.DbHost = "localhost"
-	dbConf.DbPort = uint16(5500)
-	dbConf.DbName = "user_service_db"
-	dbConf.DbUser = "user_service_administrator"
-	dbConf.DbPassword = "Ww76hQWbbt7zi2ItM6cNo4YYT"
-	dbConf.DbConnectionsPoolSize = 2
+	dbConf.DbHost = viper.GetString("Database.Host")
+	dbConf.DbPort = viper.GetUint16("Database.Port")
+	dbConf.DbName = viper.GetString("Database.Name")
+	dbConf.DbUser = viper.GetString("Database.User")
+	dbConf.DbPassword = viper.GetString("Database.Password")
+	dbConf.DbConnectionsPoolSize = viper.GetUint("Database.ConnectionsPoolSize")
 
 	return db.NewPostgresDatabase(dbConf)
 }

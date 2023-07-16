@@ -10,12 +10,13 @@ install: release
 
 setup:
 	mkdir -p build
+	cp ../../configs/server-template-dev.yml ../../configs/server-dev.yml
 
-release: setup
+release:
 	go build -o build/server main.go
 
 clean:
 	rm -rf build
 
-run: install
+run: release
 	./build/server

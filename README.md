@@ -22,7 +22,7 @@ To clone the repo and build the project from source run:
 git clone git@github.com:Knoblauchpilze/go-game.git
 ```
 
-Then go to the db creation [section](#interact-with-the-database) and follow the instructions.
+Then go to the database creation [section](#interact-with-the-database) and follow the instructions.
 
 Finally go to the root of the repository and run:
 ```bash
@@ -47,7 +47,7 @@ The issue is that it doesn't seem very clear how to do this in a programmatic wa
 
 So in the end we fell back to the database-in-a-container idiom.
 
-## Create the DB container
+## Create the database container
 
 - Go to [database](database) folder.
 - Create the docker image for the database with:
@@ -71,22 +71,22 @@ make migrate
 make start_db
 ```
 
-## Iterate on the DB schema
+## Iterate on the database schema
 
-In case some new information needs to be added to the databases one can use the migrations mechanism. By creating a new migration file in the relevant [directory](database/users/migrations) and naming accordingly (increment the number so that the `migrate` tool knows in which order migrations should be ran) it is possible to perform some modifications of the db by altering some properties. The migration should respect the existing constraints on the tables.
+In case some new information needs to be added to the databases one can use the migrations mechanism. By creating a new migration file in the relevant [directory](database/users/migrations) and naming accordingly (increment the number so that the `migrate` tool knows in which order migrations should be ran) it is possible to perform some modifications of the database by altering some properties. The migration should respect the existing constraints on the tables.
 
-Once this is done one can rebuild the db by using the specific [Makefile](database/users/Makefile) target which will only apply the migrations not yet persisted in the db schema with:
+Once this is done one can rebuild the database by using the specific [Makefile](database/users/Makefile) target which will only apply the migrations not yet persisted in the database schema with:
 ```bash
 make migrate
 ```
 
 The migrations are designed in a way that each one can be applied sequentially and can also be rolled back: this is accomplished by having a `XYZ.up.sql` file and a `XYZ.down.sql` file. Any operation performed in the `up` part should have a counterpart in the `down` part to allow a roll back. Typically if a `CREATE TABLE` statement is issued in the `up`, a `DROP TABLE` should be in the `down` file.
 
-## Managing the DB
+## Managing the database
 
-If the db container has been stopped for some reasons one can relaunch it through the `make start_db` command.
+If the database container has been stopped for some reasons one can relaunch it through the `make start_db` command.
 
-One can also directly connect to the db using the `make connect` command. The password to do so can be found in the configuration files. SQL queries can then be performed in the `psql` editor.
+One can also directly connect to the database using the `make connect` command. The password to do so can be found in the configuration files. SQL queries can then be performed in the `psql` editor.
 
 In case a full rebuild of the database container is needed, go to the [database](database) folder: from there and knowing which databse you want to manage do `cd folder/of/yout/database` and proceed to launch the following commands:
 ```bash
@@ -104,6 +104,11 @@ make migrate
 
 If all the migrations are correctly set up this will allow to effectively remove all data from the database and start fresh.
 
+## Database configuration files
+
+The purpose of a database is usually to be accessed through a server to insert/change/access the data. To do this, we usually need some connection details. This is presented in the `setup` target in the [Makefile](database/users/Makefile) of the users' database.
+
+By running `make setup` the `Makefile` will automatically generate a `yml` file based on the exsiting database connection [template](configs/db-template-dev.yml): this allows any executable to reference this and use it to connect to the database.
 
 # Structure of the project
 
@@ -140,6 +145,10 @@ The template structure is as follows:
 A `Makefile` allows to easily compile and execute the application. The logic is created in the `main.go` file and can be extended with additional packages (e.g. by adding a subfolder). The `.gitignore` file allows to not take into consideration the build result.
 
 By default the `Makefile` contains a `install` target which will copy the result of the compilation to be accessible for the whole repo in the [bin](bin) folder.
+
+## configs
+
+The [configs](configs) folder defines the template for configurations, and their actual implementation used by executables. Part of the content of this folder is automatically generated from targets in `Makefile`s from applications. See more details in the dedicated[](#configuration-files) section for executables.
 
 # Existing packages
 
@@ -324,6 +333,16 @@ var createCmd = &cobra.Command{
 The call to the server is defined in the `createUserCmdBody` method. This is equivalent to having to do the http request by hand with the added benefit of enjoying a real programming language to perform other requests beforehand or have some validation (for example authentication if needed).
 
 In general, the executable should stay relatively small and help interacting with a specific endpoint of the server.
+
+## Configuration files
+
+Most of the time, an application will use some configuration properties to function: this typically includes some urls to contact a remote server or anything that can vary when some other parts of the system to which the application belongs to change.
+
+In the [configs](configs) folder, whenever a new executable is added we encourage to add the configuration files as templates: an example can be found for a [server](configs/server-template-dev.yml). Such a file can then be used to generate multiple files and then change them as needed. This is a good practice as then we only persist a change when it has been validated.
+
+The [server](cmd/server/Makefile) `Makefile` defines a `setup` target which will generate the configuration file using a template.
+
+We encourage to use multiple configuration files, for each facet of the application. For example in case the user needs to connect to a database, one can follow the steps in the database [section](#database-configuration-files) to make the configuration available for any executable.
 
 # Future work
 

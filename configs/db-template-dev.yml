@@ -1,0 +1,7 @@
+Database:
+  Host: "localhost"
+  Port: 5500
+  ConnectionsPoolSize: 2
+  Name: DB_NAME
+  User: DB_USER
+  Password: DB_PASSWORD
