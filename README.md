@@ -73,9 +73,9 @@ make start_db
 
 ## Iterate on the DB schema
 
-In case some new information needs to be added to the database one can use the migrations mechanism. By creating a new migration file in the relevant [directory](database/migrations) and naming accordingly (increment the number so that the `migrate` tool knows in which order migrations should be ran) it is possible to perform some modifications of the db by altering some properties. The migration should respect the existing constraints on the tables.
+In case some new information needs to be added to the databases one can use the migrations mechanism. By creating a new migration file in the relevant [directory](database/users/migrations) and naming accordingly (increment the number so that the `migrate` tool knows in which order migrations should be ran) it is possible to perform some modifications of the db by altering some properties. The migration should respect the existing constraints on the tables.
 
-Once this is done one can rebuild the db by using the specific [Makefile](database/Makefile) target which will only apply the migrations not yet persisted in the db schema with:
+Once this is done one can rebuild the db by using the specific [Makefile](database/users/Makefile) target which will only apply the migrations not yet persisted in the db schema with:
 ```bash
 make migrate
 ```
@@ -88,7 +88,7 @@ If the db container has been stopped for some reasons one can relaunch it throug
 
 One can also directly connect to the db using the `make connect` command. The password to do so can be found in the configuration files. SQL queries can then be performed in the `psql` editor.
 
-In case a full rebuild of the database container is needed, go to the [database](database) folder and proceed to launch the following commands:
+In case a full rebuild of the database container is needed, go to the [database](database) folder: from there and knowing which databse you want to manage do `cd folder/of/yout/database` and proceed to launch the following commands:
 ```bash
 make remove_db
 make docker_db
@@ -119,7 +119,7 @@ The [internal](internal) folder defines the packages which are needed by the pro
 
 ## database
 
-The [database](database) folder defines all the information to interact with the databases used by the applications of thie repository. We find the configuration files, and the [migrations](database/migrations). A [Makefile](database/Makefile) allows to easily perform operations on the database.
+The [database](database) folder defines all the information to interact with the databases used by the applications of this repository. This documentation takes the [users](database/users) as an example. We find the configuration files, and the [migrations](database/users/migrations). A [Makefile](database/users/Makefile) allows to easily perform operations on the database.
 
 So far there is only one database, but if needed we could create separate folders for each database, the existing one would serve as a template. More info in the dedicated [section](#interact-with-the-database).
 
