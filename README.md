@@ -134,6 +134,7 @@ This is made possible by the [run](scripts/run.sh) script and the `make run app_
 The [cmd](cmd) contains the list of applications defined in the repository. Each has its own folder and can make use of the packages defined in [pkg](pkg) or [internal](internal).
 
 The template structure is as follows:
+
 ![example of an application](assets/resources/cmd-example-app.png)
 
 A `Makefile` allows to easily compile and execute the application. The logic is created in the `main.go` file and can be extended with additional packages (e.g. by adding a subfolder). The `.gitignore` file allows to not take into consideration the build result.
