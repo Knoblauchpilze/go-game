@@ -347,3 +347,5 @@ We encourage to use multiple configuration files, for each facet of the applicat
 # Future work
 
 A possible idea would be to replicate more or less what is done in the [sogserver](https://github.com/KnoblauchPilze/sogserver) project.
+
+Also possibly useful to dockerize the executables, see this [link](https://stackoverflow.com/questions/52266332/manually-fetch-dependencies-from-go-mod).
