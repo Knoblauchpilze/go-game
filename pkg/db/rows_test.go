@@ -126,11 +126,6 @@ func TestRows_GetAll_InvalidPreconditions(t *testing.T) {
 	err := r.GetAll(mp)
 	assert.Equal("someError", err.Error())
 	assert.Equal(0, mp.parseCalled)
-
-	r = newRows(nil, nil)
-	err = r.GetAll(mp)
-	assert.True(errors.IsErrorWithCode(err, errors.ErrNoRowsReturnedForSqlQuery))
-	assert.Equal(0, mp.parseCalled)
 }
 
 func TestRows_GetAll(t *testing.T) {
@@ -146,14 +141,33 @@ func TestRows_GetAll(t *testing.T) {
 	assert.Equal(2, mp.parseCalled)
 }
 
+func TestRows_GetAll_NoData(t *testing.T) {
+	assert := assert.New(t)
+
+	mp := &mockParser{}
+	m := &mockSqlRows{
+		numberOfRows: 0,
+	}
+	r := newRows(m, nil)
+	err := r.GetAll(mp)
+	assert.Nil(err)
+	assert.Equal(0, mp.parseCalled)
+}
+
 func TestRows_GetAll_CallsClose(t *testing.T) {
 	assert := assert.New(t)
 
 	mp := &mockParser{}
 	m := &mockSqlRows{
-		numberOfRows: 2,
+		numberOfRows: 0,
 	}
 	r := newRows(m, nil)
+	r.GetAll(mp)
+	assert.Equal(1, m.closeCalls)
+
+	m.closeCalls = 0
+	m.numberOfRows = 2
+	r = newRows(m, nil)
 	r.GetAll(mp)
 	assert.Equal(1, m.closeCalls)
 }

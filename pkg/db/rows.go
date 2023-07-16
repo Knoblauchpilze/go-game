@@ -62,8 +62,11 @@ func (r *rowsImpl) Empty() bool {
 }
 
 func (r *rowsImpl) GetSingleValue(parser RowParser) error {
-	if err := r.assertValidStateOrReturnError(); err != nil {
+	if err := r.Err(); err != nil {
 		return err
+	}
+	if r.Empty() {
+		return errors.NewCode(errors.ErrNoRowsReturnedForSqlQuery)
 	}
 
 	defer r.Close()
@@ -81,7 +84,7 @@ func (r *rowsImpl) GetSingleValue(parser RowParser) error {
 }
 
 func (r *rowsImpl) GetAll(parser RowParser) error {
-	if err := r.assertValidStateOrReturnError(); err != nil {
+	if err := r.Err(); err != nil {
 		return err
 	}
 
@@ -93,17 +96,6 @@ func (r *rowsImpl) GetAll(parser RowParser) error {
 		}
 
 		r.next = r.rows.Next()
-	}
-
-	return nil
-}
-
-func (r *rowsImpl) assertValidStateOrReturnError() error {
-	if err := r.Err(); err != nil {
-		return err
-	}
-	if r.Empty() {
-		return errors.NewCode(errors.ErrNoRowsReturnedForSqlQuery)
 	}
 
 	return nil
