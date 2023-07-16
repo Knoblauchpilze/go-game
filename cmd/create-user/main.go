@@ -7,6 +7,7 @@ import (
 	"github.com/KnoblauchPilze/go-game/pkg/dtos"
 	"github.com/KnoblauchPilze/go-game/pkg/logger"
 	"github.com/KnoblauchPilze/go-game/pkg/rest"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -33,6 +34,7 @@ func main() {
 
 func createUserCmdBody(cmd *cobra.Command, args []string) {
 	userDto := dtos.UserDto{
+		Id:       uuid.New(),
 		Mail:     "toto@some-mail.com",
 		Name:     "toto",
 		Password: "123456",
