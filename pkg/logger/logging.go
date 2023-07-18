@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"context"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -18,7 +19,7 @@ func Configure(config Configuration) {
 	confLock.Lock()
 	defer confLock.Unlock()
 
-	logrus.SetFormatter(TerminalFormatter{})
+	logrus.SetFormatter(terminalFormatter{})
 	configuration = config
 	logrus.SetLevel(config.Level)
 }
@@ -35,10 +36,6 @@ func Debugf(format string, args ...interface{}) {
 	withService().Debugf(format, args...)
 }
 
-func Printf(format string, args ...interface{}) {
-	withService().Printf(format, args...)
-}
-
 func Infof(format string, args ...interface{}) {
 	withService().Infof(format, args...)
 }
@@ -47,18 +44,30 @@ func Warnf(format string, args ...interface{}) {
 	withService().Warnf(format, args...)
 }
 
-func Warningf(format string, args ...interface{}) {
-	withService().Warningf(format, args...)
-}
-
 func Errorf(format string, args ...interface{}) {
 	withService().Errorf(format, args...)
 }
 
-func Panicf(format string, args ...interface{}) {
-	withService().Panicf(format, args...)
+func withServiceAndContext(ctx context.Context) *logrus.Entry {
+	return withService().WithContext(ctx)
 }
 
-func Fatalf(format string, args ...interface{}) {
-	withService().Fatalf(format, args...)
+func ScopedTracef(ctx context.Context, format string, args ...interface{}) {
+	withServiceAndContext(ctx).Tracef(format, args...)
+}
+
+func ScopedDebugf(ctx context.Context, format string, args ...interface{}) {
+	withServiceAndContext(ctx).Debugf(format, args...)
+}
+
+func ScopedInfof(ctx context.Context, format string, args ...interface{}) {
+	withServiceAndContext(ctx).Infof(format, args...)
+}
+
+func ScopedWarnf(ctx context.Context, format string, args ...interface{}) {
+	withServiceAndContext(ctx).Warnf(format, args...)
+}
+
+func ScopedErrorf(ctx context.Context, format string, args ...interface{}) {
+	withServiceAndContext(ctx).Errorf(format, args...)
 }
