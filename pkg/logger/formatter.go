@@ -19,7 +19,9 @@ func (t formatter) Format(logEntry *logrus.Entry) ([]byte, error) {
 	out := &bytes.Buffer{}
 
 	writeTime(logEntry.Time, out)
-	writeRequestIdIfFound(logEntry.Context, out)
+	if logEntry.Context != nil {
+		writeRequestIdIfFound(logEntry.Context, out)
+	}
 	writeLogLevel(logEntry.Level, out)
 	writeServiceIfFound(logEntry.Data, out)
 	writeAndReturnTo(logEntry.Message, out)

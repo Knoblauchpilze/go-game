@@ -85,7 +85,6 @@ func createDb() db.Database {
 func createServerRouter(repo users.Repository) *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Use(middleware.RequestLogger(routes.TimingLogFormatter{}))
 	r.Use(middleware.Recoverer)
 	r.Mount("/users", routes.UsersRouter(repo))
 

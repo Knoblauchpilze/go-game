@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/KnoblauchPilze/go-game/pkg/logger"
 	"github.com/KnoblauchPilze/go-game/pkg/rest"
 	"github.com/google/uuid"
 )
@@ -12,6 +13,8 @@ type RequestData struct {
 	Id       uuid.UUID
 	Response rest.ResponseBuilder
 }
+
+type stringDataKeyType string
 
 var requestDataKey stringDataKeyType = "requestData"
 
@@ -38,8 +41,8 @@ func (rd RequestData) WriteDetails(details interface{}, w http.ResponseWriter) {
 func RequestCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rd := NewRequestData()
-
-		ctx := context.WithValue(r.Context(), requestDataKey, rd)
+		ctx := logger.DecorateContextWithRequestId(r.Context(), rd.Id)
+		ctx = context.WithValue(ctx, requestDataKey, rd)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

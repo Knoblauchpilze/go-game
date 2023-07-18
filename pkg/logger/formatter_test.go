@@ -57,7 +57,7 @@ func TestFormatter_Format_RequestId(t *testing.T) {
 
 	out, err := f.Format(e)
 	assert.Nil(err)
-	expected := fmt.Sprintf("\033[1;35m2009-11-17 20:34:58.651\033[0m \033[1;36m%s\033[0m \033[1;32m[info]\033[0m msg\n", id)
+	expected := fmt.Sprintf("\033[1;35m2009-11-17 20:34:58.651\033[0m \033[1;34m%s\033[0m \033[1;32m[info]\033[0m msg\n", id)
 	assert.Equal(expected, string(out))
 }
 
@@ -73,6 +73,19 @@ func TestFormatter_Format_Service(t *testing.T) {
 	out, err := f.Format(e)
 	assert.Nil(err)
 	expected := "\033[1;35m2009-11-17 20:34:58.651\033[0m \033[1;32m[info]\033[0m \033[1;36m[service]\033[0m msg\n"
+	assert.Equal(expected, string(out))
+}
+
+func TestFormatter_Format_NilContext(t *testing.T) {
+	assert := assert.New(t)
+
+	f := formatter{}
+	e := dummyLogEntry()
+	e.Context = nil
+
+	out, err := f.Format(e)
+	assert.Nil(err)
+	expected := "\033[1;35m2009-11-17 20:34:58.651\033[0m \033[1;32m[info]\033[0m msg\n"
 	assert.Equal(expected, string(out))
 }
 
