@@ -3,8 +3,6 @@ package errors
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/KnoblauchPilze/go-game/pkg/logger"
 )
 
 type ErrorWithCode interface {
@@ -163,16 +161,13 @@ func (e errorImpl) marshalCause() json.RawMessage {
 	}
 
 	var out []byte
-	var err error
 
+	// Voluntarily ignoring the marshalling errors as there's nothing we
+	// can do about it.
 	if impl, ok := e.Cause.(errorImpl); ok {
-		out, err = json.Marshal(impl)
+		out, _ = json.Marshal(impl)
 	} else {
-		out, err = json.Marshal(e.Cause.Error())
-	}
-
-	if err != nil {
-		logger.Errorf("failed to marshal cause %v (%v)", e.Cause, err)
+		out, _ = json.Marshal(e.Cause.Error())
 	}
 
 	return out
