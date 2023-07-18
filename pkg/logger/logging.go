@@ -19,7 +19,7 @@ func Configure(config Configuration) {
 	confLock.Lock()
 	defer confLock.Unlock()
 
-	logrus.SetFormatter(terminalFormatter{})
+	logrus.SetFormatter(formatter{})
 	configuration = config
 	logrus.SetLevel(config.Level)
 }
