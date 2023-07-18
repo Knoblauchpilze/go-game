@@ -26,7 +26,7 @@ func main() {
 	})
 
 	if err := loadConfiguration(); err != nil {
-		logger.Fatalf("failed to load configuration (err: %v)", err)
+		logger.Errorf("failed to load configuration (err: %v)", err)
 		return
 	}
 
@@ -37,7 +37,7 @@ func main() {
 	r := createServerRouter(repo)
 
 	if err := connectToDbAndInstallCleanUp(database); err != nil {
-		logger.Fatalf("failed to connect to the db (err: %v)", err)
+		logger.Errorf("failed to connect to the db (err: %v)", err)
 		return
 	}
 	defer database.Disconnect()

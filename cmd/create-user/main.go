@@ -28,7 +28,8 @@ func main() {
 	})
 
 	if err := createCmd.Execute(); err != nil {
-		logger.Fatalf("create-user command failed (err: %v)", err)
+		logger.Errorf("create-user command failed (err: %v)", err)
+		return
 	}
 }
 

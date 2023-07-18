@@ -27,7 +27,8 @@ func main() {
 	})
 
 	if err := deleteCmd.Execute(); err != nil {
-		logger.Fatalf("delete-user command failed (err: %v)", err)
+		logger.Errorf("delete-user command failed (err: %v)", err)
+		return
 	}
 }
 

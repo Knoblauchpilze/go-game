@@ -28,7 +28,8 @@ func main() {
 	})
 
 	if err := getCmd.Execute(); err != nil {
-		logger.Fatalf("get-user command failed (err: %v)", err)
+		logger.Errorf("get-user command failed (err: %v)", err)
+		return
 	}
 }
 
