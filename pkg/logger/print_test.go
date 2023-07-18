@@ -9,19 +9,26 @@ import (
 func TestWriteAndReturn(t *testing.T) {
 	assert := assert.New(t)
 
-	out := writeAndReturn("")
-	assert.Equal("\n", out)
+	m := &mockIoWriter{}
+	writeAndReturnTo("", m)
+	assert.Equal(1, m.writeCalled)
+	assert.Equal("\n", string(m.in))
 
-	out = writeAndReturn("str")
-	assert.Equal("str\n", out)
+	m = &mockIoWriter{}
+	writeAndReturnTo("str", m)
+	assert.Equal("str\n", string(m.in))
 }
 
 func TestWriteColoredAndSeparate(t *testing.T) {
 	assert := assert.New(t)
 
-	out := writeColoredAndSeparate("", gray)
-	assert.Equal("\033[1;90m\033[0m ", out)
+	m := &mockIoWriter{}
+	writeColoredAndSeparateTo("", gray, m)
+	assert.Equal(1, m.writeCalled)
+	assert.Equal("\033[1;90m\033[0m ", string(m.in))
 
-	out = writeColoredAndSeparate("str", yellow)
-	assert.Equal("\033[1;33mstr\033[0m ", out)
+	m = &mockIoWriter{}
+	writeColoredAndSeparateTo("str", yellow, m)
+	assert.Equal(1, m.writeCalled)
+	assert.Equal("\033[1;33mstr\033[0m ", string(m.in))
 }
