@@ -16,6 +16,6 @@ jobs:
       - name: Build
         run: go build -v ./...
       - name: Run tests with the Go CLI
-        run: go test ./... -race -covermode=atomic -coverprofile=coverage.out
+        run: go test ./... -coverpkg=./... -race -covermode=atomic -coverprofile=coverage.out
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
