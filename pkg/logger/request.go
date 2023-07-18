@@ -17,8 +17,5 @@ func writeRequestIdIfFound(ctx context.Context, out io.Writer) {
 		return
 	}
 
-	str := writeColoredAndSeparate(id.String(), cyan)
-
-	// Voluntarily ignoring return values.
-	out.Write([]byte(str))
+	writeColoredAndSeparateTo(id.String(), cyan, out)
 }
