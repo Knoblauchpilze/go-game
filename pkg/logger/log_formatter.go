@@ -9,7 +9,6 @@ import (
 
 const defaultTimeFormat = "2006-01-02 15:04:05.000"
 
-const requestIdFieldName = "request"
 const serviceFieldName = "service"
 
 // Inspired from:
@@ -25,7 +24,7 @@ func (t terminalFormatter) Format(logEntry *logrus.Entry) ([]byte, error) {
 	serviceStr := ""
 
 	for field, value := range logEntry.Data {
-		if field == requestIdFieldName {
+		if field == "request" {
 			if reqId, ok := value.(string); ok {
 				reqStr = "[" + reqId + "]"
 			}
