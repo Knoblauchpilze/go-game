@@ -17,5 +17,9 @@ func writeRequestIdIfFound(ctx context.Context, out io.Writer) {
 		return
 	}
 
-	writeColoredAndSeparateTo(id.String(), cyan, out)
+	writeColoredAndSeparateTo(id.String(), blue, out)
+}
+
+func DecorateContextWithRequestId(ctx context.Context, id uuid.UUID) context.Context {
+	return context.WithValue(ctx, requestIdFieldName, id)
 }

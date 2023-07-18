@@ -43,3 +43,30 @@ func TestWriteRequestIdIfFound_ValidContext(t *testing.T) {
 	expected := fmt.Sprintf("\033[1;36m%s\033[0m ", id)
 	assert.Equal(expected, string(m.in))
 }
+
+func TestDecorateContextWithRequestId(t *testing.T) {
+	assert := assert.New(t)
+
+	ctx := context.TODO()
+	id := uuid.New()
+
+	decorated := DecorateContextWithRequestId(ctx, id)
+	val, ok := decorated.Value(requestIdFieldName).(uuid.UUID)
+	assert.True(ok)
+	assert.Equal(id, val)
+}
+
+func TestDecorateContextWithRequestId_Write(t *testing.T) {
+	assert := assert.New(t)
+
+	ctx := context.TODO()
+	id := uuid.New()
+
+	decorated := DecorateContextWithRequestId(ctx, id)
+
+	m := &mockIoWriter{}
+	writeRequestIdIfFound(decorated, m)
+	assert.Equal(1, m.writeCalled)
+	expected := fmt.Sprintf("\033[1;36m%s\033[0m ", id)
+	assert.Equal(expected, string(m.in))
+}

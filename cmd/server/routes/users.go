@@ -7,6 +7,7 @@ import (
 	"github.com/KnoblauchPilze/go-game/pkg/middlewares"
 	"github.com/KnoblauchPilze/go-game/pkg/users"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func UsersRouter(repo users.Repository) http.Handler {
@@ -14,6 +15,7 @@ func UsersRouter(repo users.Repository) http.Handler {
 
 	r.Route("/", func(r chi.Router) {
 		r.Use(middlewares.RequestCtx)
+		r.Use(middleware.RequestLogger(timingLogFormatter{}))
 		r.Get("/", getUsers(repo))
 		r.Post("/", createUser(repo))
 
