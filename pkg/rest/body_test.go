@@ -91,53 +91,83 @@ func generateRequestWithBody(body []byte) *http.Request {
 	return &req
 }
 
-// func TestGetBodyFromHttpResponseAs_InvalidResponse(t *testing.T) {
-// 	assert := assert.New(t)
+func TestGetBodyFromHttpResponseAs_NilResponse(t *testing.T) {
+	assert := assert.New(t)
 
-// 	var in foo
-// 	err := GetBodyFromHttpResponseAs(nil, &in)
-// 	assert.True(errors.IsErrorWithCode(err, errors.ErrNoResponse))
+	var in foo
+	err := GetBodyFromHttpResponseAs(nil, &in)
+	assert.True(errors.IsErrorWithCode(err, errors.ErrNoResponse))
+}
 
-// 	resp := http.Response{
-// 		StatusCode: http.StatusBadRequest,
-// 	}
-// 	err = GetBodyFromHttpResponseAs(&resp, &in)
-// 	assert.True(errors.IsErrorWithCode(err, errors.ErrResponseIsError))
+func TestGetBodyFromHttpResponseAs_ResponseWithError(t *testing.T) {
+	assert := assert.New(t)
 
-// 	resp.StatusCode = http.StatusOK
-// 	rdr := bytes.NewReader([]byte("haha"))
-// 	resp.Body = io.NopCloser(rdr)
+	var in foo
+	resp := http.Response{
+		StatusCode: http.StatusBadRequest,
+	}
+	err := GetBodyFromHttpResponseAs(&resp, &in)
+	assert.True(errors.IsErrorWithCode(err, errors.ErrResponseIsError))
+}
 
-// 	err = GetBodyFromHttpResponseAs(&resp, &in)
-// 	fmt.Printf("%v\n", err)
-// 	assert.True(errors.IsErrorWithCode(err, errors.ErrBodyParsingFailed))
-// }
+func TestGetBodyFromHttpResponseAs_ResponseOkWithNilBody(t *testing.T) {
+	assert := assert.New(t)
 
-// func TestGetBodyFromHttpResponseAs_NoBody(t *testing.T) {
-// 	assert := assert.New(t)
+	resp := http.Response{
+		StatusCode: http.StatusOK,
+		Body:       nil,
+	}
 
-// 	resp := http.Response{
-// 		StatusCode: http.StatusOK,
-// 	}
-// 	resp.Body = nil
+	var in foo
+	err := GetBodyFromHttpResponseAs(&resp, &in)
+	assert.True(errors.IsErrorWithCode(err, errors.ErrFailedToGetBody))
+}
 
-// 	var in foo
-// 	err := GetBodyFromHttpResponseAs(&resp, &in)
-// 	assert.True(errors.IsErrorWithCode(err, errors.ErrFailedToGetBody))
-// }
+func TestGetBodyFromHttpResponseAs_ResponseNOkWithNilBody(t *testing.T) {
+	assert := assert.New(t)
 
-// func TestGetBodyFromHttpResponseAs_ErrBody(t *testing.T) {
-// 	assert := assert.New(t)
+	resp := http.Response{
+		StatusCode: http.StatusBadGateway,
+		Body:       nil,
+	}
 
-// 	resp := http.Response{
-// 		StatusCode: http.StatusOK,
-// 	}
-// 	resp.Body = &mockBody{}
+	var in foo
+	err := GetBodyFromHttpResponseAs(&resp, &in)
+	fmt.Printf("%+v", err)
+	assert.True(errors.IsErrorWithCode(err, errors.ErrResponseIsError))
+	cause := errors.Unwrap(err)
+	expected := http.StatusText(http.StatusBadGateway)
+	assert.Equal(expected, cause.Error())
+}
 
-// 	var in foo
-// 	err := GetBodyFromHttpResponseAs(&resp, &in)
-// 	assert.True(errors.IsErrorWithCode(err, errors.ErrFailedToGetBody))
-// }
+func TestGetBodyFromHttpResponseAs_BodyReadError(t *testing.T) {
+	assert := assert.New(t)
+
+	resp := http.Response{
+		StatusCode: http.StatusOK,
+	}
+	resp.Body = &mockBody{
+		readErr: fmt.Errorf("someError"),
+	}
+
+	var in foo
+	err := GetBodyFromHttpResponseAs(&resp, &in)
+	assert.True(errors.IsErrorWithCode(err, errors.ErrFailedToGetBody))
+}
+
+func TestGetBodyFromHttpResponseAs_ResponseWithUnexpectedBody(t *testing.T) {
+	assert := assert.New(t)
+
+	var in foo
+	rdr := bytes.NewReader([]byte("haha"))
+	resp := http.Response{
+		StatusCode: http.StatusOK,
+		Body:       io.NopCloser(rdr),
+	}
+
+	err := GetBodyFromHttpResponseAs(&resp, &in)
+	assert.True(errors.IsErrorWithCode(err, errors.ErrBodyParsingFailed))
+}
 
 // func TestGetBodyFromHttpResponseAs_InvalidBody(t *testing.T) {
 // 	assert := assert.New(t)
