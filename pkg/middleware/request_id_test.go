@@ -10,9 +10,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type mockHttpHandler struct{}
+type mockHttpHandler struct {
+	outCode      *int
+	inRespWriter http.ResponseWriter
+	inReq        *http.Request
+}
 
-func (m *mockHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {}
+func (m *mockHttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	m.inRespWriter = w
+	m.inReq = r
+
+	if m.outCode != nil {
+		w.WriteHeader(*m.outCode)
+	}
+}
 
 func TestRequestIdCtx_CallsDecorator(t *testing.T) {
 	assert := assert.New(t)
@@ -24,10 +35,9 @@ func TestRequestIdCtx_CallsDecorator(t *testing.T) {
 		decoratorCalled = true
 		return ctx
 	}
+	mrw := &mockResponseWriter{}
 
 	out := RequestIdCtx(m)
-
-	mrw := &mockResponseWriter{}
 	out.ServeHTTP(mrw, &http.Request{})
 
 	assert.True(decoratorCalled)
