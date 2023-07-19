@@ -133,7 +133,6 @@ func TestGetBodyFromHttpResponseAs_ResponseNOkWithNilBody(t *testing.T) {
 
 	var in foo
 	err := GetBodyFromHttpResponseAs(&resp, &in)
-	fmt.Printf("%+v", err)
 	assert.True(errors.IsErrorWithCode(err, errors.ErrResponseIsError))
 	cause := errors.Unwrap(err)
 	expected := http.StatusText(http.StatusBadGateway)
@@ -169,60 +168,58 @@ func TestGetBodyFromHttpResponseAs_ResponseWithUnexpectedBody(t *testing.T) {
 	assert.True(errors.IsErrorWithCode(err, errors.ErrBodyParsingFailed))
 }
 
-// func TestGetBodyFromHttpResponseAs_InvalidBody(t *testing.T) {
-// 	assert := assert.New(t)
+func TestGetBodyFromHttpResponseAs_ValidBody_ResponseWithError(t *testing.T) {
+	assert := assert.New(t)
 
-// 	var in foo
+	in := foo{Bar: "bb", Baz: 12}
+	resp := generateResponseWithCodeAndBody(http.StatusBadRequest, in)
 
-// 	resp := generateResponseWithBody(nil)
-// 	err := GetBodyFromHttpResponseAs(resp, &in)
-// 	assert.True(errors.IsErrorWithCode(err, errors.ErrBodyParsingFailed))
+	var out foo
+	err := GetBodyFromHttpResponseAs(resp, &out)
+	assert.True(errors.IsErrorWithCode(err, errors.ErrResponseIsError))
+	cause := errors.Unwrap(err)
+	expected := "{\"Bar\":\"bb\",\"Baz\":12}"
+	assert.Equal(expected, cause.Error())
+}
 
-// 	resp = generateResponseWithBody("invalid")
-// 	err = GetBodyFromHttpResponseAs(resp, &in)
-// 	assert.True(errors.IsErrorWithCode(err, errors.ErrBodyParsingFailed))
-// }
+func TestGetBodyFromHttpResponseAs_ValidBody_UnexpectedBody(t *testing.T) {
+	assert := assert.New(t)
 
-// func TestGetBodyFromHttpResponseAs_ErrResponse(t *testing.T) {
-// 	assert := assert.New(t)
+	resp := generateResponseWithCodeAndBody(http.StatusOK, 32)
 
-// 	in := foo{Bar: "bb", Baz: 12}
-// 	resp := generateResponseWithBody(in)
-// 	resp.StatusCode = http.StatusBadRequest
+	var out foo
+	err := GetBodyFromHttpResponseAs(resp, &out)
+	assert.True(errors.IsErrorWithCode(err, errors.ErrBodyParsingFailed))
+}
 
-// 	var out foo
-// 	err := GetBodyFromHttpResponseAs(resp, &out)
-// 	assert.True(errors.IsErrorWithCode(err, errors.ErrResponseIsError))
-// }
+func TestGetBodyFromHttpResponseAs(t *testing.T) {
+	assert := assert.New(t)
 
-// func TestGetBodyFromHttpResponseAs(t *testing.T) {
-// 	assert := assert.New(t)
+	in := foo{Bar: "bb", Baz: 12}
+	resp := generateResponseWithCodeAndBody(http.StatusOK, in)
 
-// 	in := foo{Bar: "bb", Baz: 12}
-// 	resp := generateResponseWithBody(in)
+	var out foo
 
-// 	var out foo
+	err := GetBodyFromHttpResponseAs(resp, &out)
+	assert.Nil(err)
+	assert.Equal(in.Bar, out.Bar)
+	assert.Equal(in.Baz, out.Baz)
+}
 
-// 	err := GetBodyFromHttpResponseAs(resp, &out)
-// 	assert.Nil(err)
-// 	assert.Equal(in.Bar, out.Bar)
-// 	assert.Equal(in.Baz, out.Baz)
-// }
+func generateResponseWithCodeAndBody(code int, body interface{}) *http.Response {
+	mBody, _ := json.Marshal(body)
 
-// func generateResponseWithBody(body interface{}) *http.Response {
-// 	resp := http.Response{
-// 		StatusCode: http.StatusOK,
-// 	}
+	in := ResponseTemplate{
+		RequestId: dummyId,
+		Status:    "someStatus",
+		Details:   mBody,
+	}
 
-// 	in := NewSuccessResponse(uuid.UUID{})
-// 	if body != nil {
-// 		in.WithDetails(body)
-// 	}
+	data, _ := json.Marshal(in)
+	rdr := bytes.NewReader(data)
 
-// 	data, _ := json.Marshal(in)
-
-// 	rdr := bytes.NewReader(data)
-// 	resp.Body = io.NopCloser(rdr)
-
-// 	return &resp
-// }
+	return &http.Response{
+		StatusCode: code,
+		Body:       io.NopCloser(rdr),
+	}
+}
