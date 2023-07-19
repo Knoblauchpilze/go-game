@@ -10,9 +10,10 @@ import (
 	"github.com/KnoblauchPilze/go-game/cmd/server/routes"
 	"github.com/KnoblauchPilze/go-game/pkg/db"
 	"github.com/KnoblauchPilze/go-game/pkg/logger"
+	"github.com/KnoblauchPilze/go-game/pkg/middleware"
 	"github.com/KnoblauchPilze/go-game/pkg/users"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	cmiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -85,7 +86,9 @@ func createDb() db.Database {
 func createServerRouter(repo users.Repository) *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Use(middleware.Recoverer)
+	r.Use(cmiddleware.Recoverer)
+	r.Use(middleware.RequestIdCtx)
+	r.Use(middleware.TimingCtx)
 	r.Mount("/users", routes.UsersRouter(repo))
 
 	return r
