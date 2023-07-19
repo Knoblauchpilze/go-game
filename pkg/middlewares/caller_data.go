@@ -8,6 +8,9 @@ import (
 	"github.com/KnoblauchPilze/go-game/pkg/logger"
 )
 
+var infoLog = logger.ScopedInfof
+var warnLog = logger.ScopedWarnf
+
 type callerData struct {
 	start time.Time
 	req   *http.Request
@@ -25,11 +28,11 @@ func (c callerData) write(w wrapResponseWriter) {
 	str := c.serialize(w)
 
 	if w.Status() == http.StatusOK {
-		logger.ScopedInfof(c.req.Context(), str)
+		infoLog(c.req.Context(), str)
 		return
 	}
 
-	logger.ScopedWarnf(c.req.Context(), str)
+	warnLog(c.req.Context(), str)
 }
 
 func (c callerData) serialize(w wrapResponseWriter) string {
