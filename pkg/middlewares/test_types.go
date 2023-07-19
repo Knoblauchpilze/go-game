@@ -7,24 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type mockResponseWriter struct {
-	code int
-	data []byte
-}
-
-func (mrw *mockResponseWriter) Header() http.Header {
-	return http.Header{}
-}
-
-func (mrw *mockResponseWriter) Write(out []byte) (int, error) {
-	mrw.data = out
-	return len(mrw.data), nil
-}
-
-func (mrw *mockResponseWriter) WriteHeader(statusCode int) {
-	mrw.code = statusCode
-}
-
 type expectedResponseBody struct {
 	RequestId uuid.UUID
 	Status    string
