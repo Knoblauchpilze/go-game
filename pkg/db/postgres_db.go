@@ -84,6 +84,9 @@ func (db *postgresDb) Query(query Query) Rows {
 	}
 
 	sqlQuery := query.ToSql()
+	if query.Verbose() {
+		logger.Tracef("executing: %s", query.ToSql())
+	}
 
 	var err error
 	rows, err := db.pool.Query(sqlQuery)
