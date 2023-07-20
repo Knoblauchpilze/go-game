@@ -149,6 +149,28 @@ func TestPostgresDatabase_Query(t *testing.T) {
 	assert.Equal("someSqlCode", mockDb.sqlQueriesReceived[0])
 }
 
+func TestPostgresDatabase_Query_Verbose(t *testing.T) {
+	assert := assert.New(t)
+
+	config := testConfig
+	mockDb := mockPgxDbFacade{}
+	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
+		return &mockDb, nil
+	}
+
+	db := NewPostgresDatabase(config)
+	db.Connect()
+
+	q := queryImpl{
+		sqlCode: "someSqlCode",
+		verbose: true,
+	}
+	rows := db.Query(q)
+	assert.Nil(rows.Err())
+	assert.Equal(1, len(mockDb.sqlQueriesReceived))
+	assert.Equal("someSqlCode", mockDb.sqlQueriesReceived[0])
+}
+
 func TestPostgresDatabase_Query_Fail(t *testing.T) {
 	assert := assert.New(t)
 

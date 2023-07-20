@@ -1,10 +1,9 @@
 package db
 
-import "github.com/KnoblauchPilze/go-game/pkg/logger"
-
 type Query interface {
 	Valid() bool
 	ToSql() string
+	Verbose() bool
 }
 
 type queryImpl struct {
@@ -17,8 +16,9 @@ func (q queryImpl) Valid() bool {
 }
 
 func (q queryImpl) ToSql() string {
-	if q.verbose {
-		logger.Tracef("sql query: %s", q.sqlCode)
-	}
 	return q.sqlCode
+}
+
+func (q queryImpl) Verbose() bool {
+	return q.verbose
 }
