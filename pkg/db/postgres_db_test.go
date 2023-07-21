@@ -21,11 +21,13 @@ var testConfig = Config{
 }
 
 type mockPgxDbFacade struct {
+	queryDelay time.Duration
 	rows       *pgx.Rows
 	queryError error
 
 	sqlQueriesReceived []string
 
+	execDelay time.Duration
 	tag       pgx.CommandTag
 	execError error
 
@@ -40,13 +42,21 @@ func (m *mockPgxDbFacade) Close() {
 
 func (m *mockPgxDbFacade) Query(sql string, args ...interface{}) (*pgx.Rows, error) {
 	m.sqlQueriesReceived = append(m.sqlQueriesReceived, sql)
+	if m.queryDelay > 0 {
+		time.Sleep(m.queryDelay)
+	}
 	return m.rows, m.queryError
 }
 
 func (m *mockPgxDbFacade) Exec(sql string, arguments ...interface{}) (pgx.CommandTag, error) {
 	m.sqlExecuteReceived = append(m.sqlExecuteReceived, sql)
+	if m.execDelay > 0 {
+		time.Sleep(m.execDelay)
+	}
 	return m.tag, m.execError
 }
+
+var defaultSleep = 100 * time.Millisecond
 
 func TestPostgresDatabase_Connect(t *testing.T) {
 	assert := assert.New(t)
@@ -224,7 +234,11 @@ func TestPostgresDatabase_Query_Timeout(t *testing.T) {
 	assert := assert.New(t)
 
 	config := testConfig
-	mockDb := mockPgxDbFacade{}
+	config.DbQueryTimeout = defaultSleep / 2
+	mockDb := mockPgxDbFacade{
+		queryDelay: defaultSleep,
+		rows:       &pgx.Rows{},
+	}
 	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
 		return &mockDb, nil
 	}
@@ -237,9 +251,12 @@ func TestPostgresDatabase_Query_Timeout(t *testing.T) {
 		sqlCode: "someSqlCode",
 	}
 	rows := db.Query(ctx, q)
-	assert.Nil(rows.Err())
-	assert.Equal(1, len(mockDb.sqlQueriesReceived))
-	assert.Equal("someSqlCode", mockDb.sqlQueriesReceived[0])
+	// Wait for query to finish with some margin.
+	time.Sleep(2 * defaultSleep)
+	err := rows.Err()
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestTimeout))
+	cause := errors.Unwrap(err)
+	assert.Equal(context.DeadlineExceeded, cause)
 }
 
 func TestPostgresDatabase_Execute_NotConnected(t *testing.T) {
@@ -343,7 +360,10 @@ func TestPostgresDatabase_Execute_Timeout(t *testing.T) {
 	assert := assert.New(t)
 
 	config := testConfig
-	mockDb := mockPgxDbFacade{}
+	config.DbQueryTimeout = defaultSleep / 2
+	mockDb := mockPgxDbFacade{
+		execDelay: defaultSleep,
+	}
 	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
 		return &mockDb, nil
 	}
@@ -356,7 +376,9 @@ func TestPostgresDatabase_Execute_Timeout(t *testing.T) {
 		sqlCode: "someSqlCode",
 	}
 	result := db.Execute(ctx, q)
-	assert.Nil(result.Err)
-	assert.Equal(1, len(mockDb.sqlExecuteReceived))
-	assert.Equal("someSqlCode", mockDb.sqlExecuteReceived[0])
+	// Wait for query to finish with some margin.
+	time.Sleep(2 * defaultSleep)
+	assert.True(errors.IsErrorWithCode(result.Err, errors.ErrDbRequestTimeout))
+	cause := errors.Unwrap(result.Err)
+	assert.Equal(context.DeadlineExceeded, cause)
 }
