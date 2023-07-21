@@ -40,7 +40,7 @@ func TestWriteRequestIdIfFound_ValidContext(t *testing.T) {
 
 	writeRequestIdIfFound(ctx, m)
 	assert.Equal(1, m.writeCalled)
-	expected := fmt.Sprintf("\033[1;36m%s\033[0m ", id)
+	expected := fmt.Sprintf("\033[1;34m%s\033[0m ", id)
 	assert.Equal(expected, string(m.in))
 }
 
