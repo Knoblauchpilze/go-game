@@ -24,7 +24,10 @@ type Config struct {
 func NewConfig() Config {
 	conf := Config{
 		creationFunc: func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
-			return pgx.NewConnPool(config)
+			var err error
+			var f pgxDbFacadeImpl
+			f.pool, err = pgx.NewConnPool(config)
+			return &f, err
 		},
 	}
 

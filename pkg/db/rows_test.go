@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"sync/atomic"
 	"testing"
 
 	"github.com/KnoblauchPilze/go-game/pkg/errors"
@@ -27,7 +28,7 @@ func TestRows_Close(t *testing.T) {
 	var m mockSqlRows
 	r = newRows(&m, nil)
 	r.Close()
-	assert.Equal(1, m.closeCalls)
+	assert.Equal(int32(1), m.closeCalls.Load())
 }
 
 func TestRows_Empty(t *testing.T) {
@@ -85,7 +86,7 @@ func TestRows_GetSingleValue_CallsClose(t *testing.T) {
 	}
 	r := newRows(m, nil)
 	r.GetSingleValue(mp)
-	assert.Equal(1, m.closeCalls)
+	assert.Equal(int32(1), m.closeCalls.Load())
 }
 
 func TestRows_GetSingleValue_ScannerError(t *testing.T) {
@@ -163,13 +164,13 @@ func TestRows_GetAll_CallsClose(t *testing.T) {
 	}
 	r := newRows(m, nil)
 	r.GetAll(mp)
-	assert.Equal(1, m.closeCalls)
+	assert.Equal(int32(1), m.closeCalls.Load())
 
-	m.closeCalls = 0
+	m.closeCalls.Store(0)
 	m.numberOfRows = 2
 	r = newRows(m, nil)
 	r.GetAll(mp)
-	assert.Equal(1, m.closeCalls)
+	assert.Equal(int32(1), m.closeCalls.Load())
 }
 
 func TestRows_GetAll_ScannerError(t *testing.T) {
@@ -191,7 +192,7 @@ type mockSqlRows struct {
 	count        int
 	numberOfRows int
 	scanError    error
-	closeCalls   int
+	closeCalls   atomic.Int32
 }
 
 func (m *mockSqlRows) Next() bool {
@@ -205,7 +206,7 @@ func (m *mockSqlRows) Scan(dest ...interface{}) error {
 }
 
 func (m *mockSqlRows) Close() {
-	m.closeCalls++
+	m.closeCalls.Add(1)
 }
 
 type mockParser struct {

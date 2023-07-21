@@ -102,7 +102,7 @@ func (db *postgresDb) Query(ctx context.Context, query Query) Rows {
 		logger.ScopedTracef(ctx, "executing: %s", query.ToSql())
 	}
 
-	var rows *pgx.Rows
+	var rows sqlRows
 	p := common.Process{
 		WorkFunc: func() error {
 			var err error
@@ -111,8 +111,7 @@ func (db *postgresDb) Query(ctx context.Context, query Query) Rows {
 		},
 		CleanUpIfFailFunc: func() {
 			logger.ScopedTracef(ctx, "closing rows after query failure")
-			// TODO: Reactivate this
-			// rows.Close()
+			rows.Close()
 		},
 	}
 
