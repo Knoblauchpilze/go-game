@@ -9,11 +9,13 @@ type pgxDbFacade interface {
 }
 
 type pgxDbFacadeImpl struct {
-	pool *pgx.ConnPool
+	pool pgxDbConn
 }
 
+var pgxConnectionFunc = pgx.NewConnPool
+
 func newPgxDbFacadeImpl(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
-	pool, err := pgx.NewConnPool(config)
+	pool, err := pgxConnectionFunc(config)
 	f := pgxDbFacadeImpl{
 		pool: pool,
 	}
@@ -25,7 +27,6 @@ func (f *pgxDbFacadeImpl) Close() {
 }
 
 func (f *pgxDbFacadeImpl) Query(sql string, args ...interface{}) (sqlRows, error) {
-
 	return f.pool.Query(sql, args...)
 }
 
