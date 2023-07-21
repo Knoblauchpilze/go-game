@@ -31,6 +31,7 @@ func executeWithTimeout(process Process, ctx context.Context, timeout time.Durat
 	processDone := make(chan bool, 1)
 	start := time.Now()
 
+	// https://go.dev/doc/articles/race_detector
 	var errP error
 	go func() {
 		errP = process()
