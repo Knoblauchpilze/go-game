@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx"
 )
 
-type CreationFunc func(config pgx.ConnPoolConfig) (pgxDbFacade, error)
+type dbCreationFunc func(config pgx.ConnPoolConfig) (pgxDbFacade, error)
 
 type Config struct {
 	DbHost                string
@@ -18,17 +18,12 @@ type Config struct {
 	DbConnectionsPoolSize uint
 	DbConnectionTimeout   time.Duration
 	DbQueryTimeout        time.Duration
-	creationFunc          CreationFunc
+	creationFunc          dbCreationFunc
 }
 
 func NewConfig() Config {
 	conf := Config{
-		creationFunc: func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
-			var err error
-			var f pgxDbFacadeImpl
-			f.pool, err = pgx.NewConnPool(config)
-			return &f, err
-		},
+		creationFunc: newPgxDbFacadeImpl,
 	}
 
 	return conf
