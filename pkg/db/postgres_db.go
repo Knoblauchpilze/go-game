@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"sync"
 
 	"github.com/KnoblauchPilze/go-game/pkg/errors"
@@ -24,8 +25,8 @@ func NewPostgresDatabase(conf Config) Database {
 	return &db
 }
 
-func (db *postgresDb) Connect() error {
-	logger.Infof("connection attempt to %s", db.config)
+func (db *postgresDb) Connect(ctx context.Context) error {
+	logger.ScopedInfof(ctx, "connection attempt to %s", db.config)
 
 	pgxConf := pgx.ConnPoolConfig{
 		ConnConfig: pgx.ConnConfig{
@@ -44,7 +45,7 @@ func (db *postgresDb) Connect() error {
 		return errors.WrapCode(err, errors.ErrDbConnectionFailed)
 	}
 
-	logger.Infof("connected to %s", db.config)
+	logger.ScopedInfof(ctx, "connected to %s", db.config)
 
 	db.lock.Lock()
 	func() {
@@ -55,7 +56,7 @@ func (db *postgresDb) Connect() error {
 	return nil
 }
 
-func (db *postgresDb) Disconnect() error {
+func (db *postgresDb) Disconnect(ctx context.Context) error {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 
@@ -66,12 +67,12 @@ func (db *postgresDb) Disconnect() error {
 	db.pool.Close()
 	db.pool = nil
 
-	logger.Infof("connection to %s closed", db.config)
+	logger.ScopedInfof(ctx, "connection to %s closed", db.config)
 
 	return nil
 }
 
-func (db *postgresDb) Query(query Query) Rows {
+func (db *postgresDb) Query(ctx context.Context, query Query) Rows {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 
@@ -85,7 +86,7 @@ func (db *postgresDb) Query(query Query) Rows {
 
 	sqlQuery := query.ToSql()
 	if query.Verbose() {
-		logger.Tracef("executing: %s", query.ToSql())
+		logger.ScopedTracef(ctx, "executing: %s", query.ToSql())
 	}
 
 	var err error
@@ -97,7 +98,7 @@ func (db *postgresDb) Query(query Query) Rows {
 	return newRows(rows, nil)
 }
 
-func (db *postgresDb) Execute(query Query) Result {
+func (db *postgresDb) Execute(ctx context.Context, query Query) Result {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 
@@ -114,6 +115,9 @@ func (db *postgresDb) Execute(query Query) Result {
 	}
 
 	sqlQuery := query.ToSql()
+	if query.Verbose() {
+		logger.ScopedTracef(ctx, "executing: %s", query.ToSql())
+	}
 
 	var err error
 	out.tag, err = db.pool.Exec(sqlQuery)

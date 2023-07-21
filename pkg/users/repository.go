@@ -1,12 +1,16 @@
 package users
 
-import "github.com/google/uuid"
+import (
+	"context"
+
+	"github.com/google/uuid"
+)
 
 // https://threedots.tech/post/repository-pattern-in-go/
 type Repository interface {
-	Create(user User) (uuid.UUID, error)
-	Get(id uuid.UUID) (User, error)
-	Delete(id uuid.UUID) error
+	Create(ctx context.Context, user User) (uuid.UUID, error)
+	Get(ctx context.Context, id uuid.UUID) (User, error)
+	Delete(ctx context.Context, id uuid.UUID) error
 
-	GetAll() ([]uuid.UUID, error)
+	GetAll(ctx context.Context) ([]uuid.UUID, error)
 }

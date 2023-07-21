@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -20,7 +21,7 @@ func TestQueryExecutor_runQueryAndReturnRows_BuildError(t *testing.T) {
 		db: mdb,
 	}
 
-	_, err := qe.runQueryAndReturnRows(mqb)
+	_, err := qe.runQueryAndReturnRows(context.TODO(), mqb)
 	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestCreationFailed))
 	cause := errors.Unwrap(err)
 	assert.Contains(cause.Error(), "someError")
@@ -40,7 +41,7 @@ func TestQueryExecutor_runQueryAndReturnRows_QueryError(t *testing.T) {
 		db: mdb,
 	}
 
-	_, err := qe.runQueryAndReturnRows(mqb)
+	_, err := qe.runQueryAndReturnRows(context.TODO(), mqb)
 	assert.Contains(err.Error(), "someError")
 }
 
@@ -57,7 +58,7 @@ func TestQueryExecutor_runQueryAndReturnRows(t *testing.T) {
 		db: mdb,
 	}
 
-	_, err := qe.runQueryAndReturnRows(mqb)
+	_, err := qe.runQueryAndReturnRows(context.TODO(), mqb)
 	assert.Nil(err)
 	assert.Equal(1, mdb.queryCalls)
 }
@@ -73,7 +74,7 @@ func TestQueryExecutor_RunQuery(t *testing.T) {
 
 	qe := NewQueryExecutor(mdb)
 
-	err := qe.RunQuery(mqb)
+	err := qe.RunQuery(context.TODO(), mqb)
 	assert.Nil(err)
 	assert.Equal(1, mdb.queryCalls)
 	assert.Equal(1, mr.closeCalled)
@@ -91,7 +92,7 @@ func TestQueryExecutor_RunQuery_Error(t *testing.T) {
 
 	qe := NewQueryExecutor(mdb)
 
-	err := qe.RunQuery(mqb)
+	err := qe.RunQuery(context.TODO(), mqb)
 	assert.Contains(err.Error(), "someError")
 }
 
@@ -106,7 +107,7 @@ func TestQueryExecutor_RunQueryAndScanSingleResult(t *testing.T) {
 
 	qe := NewQueryExecutor(mdb)
 
-	err := qe.RunQueryAndScanSingleResult(mqb, &mockParser{})
+	err := qe.RunQueryAndScanSingleResult(context.TODO(), mqb, &mockParser{})
 	assert.Nil(err)
 	assert.Equal(1, mdb.queryCalls)
 	assert.Equal(1, mr.singleValueCalled)
@@ -125,7 +126,7 @@ func TestQueryExecutor_RunQueryAndScanSingleResult_Error(t *testing.T) {
 
 	qe := NewQueryExecutor(mdb)
 
-	err := qe.RunQueryAndScanSingleResult(mqb, &mockParser{})
+	err := qe.RunQueryAndScanSingleResult(context.TODO(), mqb, &mockParser{})
 	assert.Contains(err.Error(), "someError")
 }
 
@@ -142,7 +143,7 @@ func TestQueryExecutor_RunQueryAndScanSingleResult_ScanError(t *testing.T) {
 
 	qe := NewQueryExecutor(mdb)
 
-	err := qe.RunQueryAndScanSingleResult(mqb, &mockParser{})
+	err := qe.RunQueryAndScanSingleResult(context.TODO(), mqb, &mockParser{})
 	assert.True(errors.IsErrorWithCode(err, errors.ErrDbCorruptedData))
 	cause := errors.Unwrap(err)
 	assert.Contains(cause.Error(), "someError")
@@ -160,7 +161,7 @@ func TestQueryExecutor_RunQueryAndScanAllResults(t *testing.T) {
 
 	qe := NewQueryExecutor(mdb)
 
-	err := qe.RunQueryAndScanAllResults(mqb, &mockParser{})
+	err := qe.RunQueryAndScanAllResults(context.TODO(), mqb, &mockParser{})
 	assert.Nil(err)
 	assert.Equal(1, mdb.queryCalls)
 	assert.Equal(1, mr.allCalled)
@@ -179,7 +180,7 @@ func TestQueryExecutor_RunQueryAndScanAllResults_Error(t *testing.T) {
 
 	qe := NewQueryExecutor(mdb)
 
-	err := qe.RunQueryAndScanAllResults(mqb, &mockParser{})
+	err := qe.RunQueryAndScanAllResults(context.TODO(), mqb, &mockParser{})
 	assert.Contains(err.Error(), "someError")
 }
 
@@ -196,7 +197,7 @@ func TestQueryExecutor_RunQueryAndScanAllResults_ScanError(t *testing.T) {
 
 	qe := NewQueryExecutor(mdb)
 
-	err := qe.RunQueryAndScanAllResults(mqb, &mockParser{})
+	err := qe.RunQueryAndScanAllResults(context.TODO(), mqb, &mockParser{})
 	assert.True(errors.IsErrorWithCode(err, errors.ErrDbCorruptedData))
 	cause := errors.Unwrap(err)
 	assert.Contains(cause.Error(), "someError")
@@ -224,21 +225,21 @@ type mockDb struct {
 	result       Result
 }
 
-func (m *mockDb) Connect() error {
+func (m *mockDb) Connect(ctx context.Context) error {
 	return m.connectErr
 }
 
-func (m *mockDb) Disconnect() error {
+func (m *mockDb) Disconnect(ctx context.Context) error {
 	return m.disconnectErr
 }
 
-func (m *mockDb) Query(query Query) Rows {
+func (m *mockDb) Query(ctx context.Context, query Query) Rows {
 	m.queries = append(m.queries, query)
 	m.queryCalls++
 	return m.rows
 }
 
-func (m *mockDb) Execute(query Query) Result {
+func (m *mockDb) Execute(ctx context.Context, query Query) Result {
 	m.executions = append(m.executions, query)
 	m.executeCalls++
 	return m.result

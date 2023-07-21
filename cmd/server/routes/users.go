@@ -27,7 +27,7 @@ func UsersRouter(repo users.Repository) http.Handler {
 
 func getUsers(repo users.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		users, err := repo.GetAll()
+		users, err := repo.GetAll(r.Context())
 		if err != nil {
 			rest.FailWithErrorAndCode(r.Context(), err, http.StatusInternalServerError, w)
 			return
@@ -46,7 +46,7 @@ func createUser(repo users.Repository) http.HandlerFunc {
 			return
 		}
 
-		id, err := repo.Create(dto.Convert())
+		id, err := repo.Create(r.Context(), dto.Convert())
 		if err != nil {
 			rest.FailWithErrorAndCode(r.Context(), err, http.StatusBadRequest, w)
 			return
@@ -64,7 +64,7 @@ func getUser(repo users.Repository) http.HandlerFunc {
 			return
 		}
 
-		user, err := repo.Get(id)
+		user, err := repo.Get(r.Context(), id)
 		if err != nil {
 			rest.FailWithErrorAndCode(r.Context(), err, http.StatusBadRequest, w)
 			return
@@ -82,7 +82,7 @@ func deleteUser(repo users.Repository) http.HandlerFunc {
 			return
 		}
 
-		if err := repo.Delete(id); err != nil {
+		if err := repo.Delete(r.Context(), id); err != nil {
 			rest.FailWithErrorAndCode(r.Context(), err, http.StatusBadRequest, w)
 			return
 		}

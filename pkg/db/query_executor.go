@@ -1,11 +1,15 @@
 package db
 
-import "github.com/KnoblauchPilze/go-game/pkg/errors"
+import (
+	"context"
+
+	"github.com/KnoblauchPilze/go-game/pkg/errors"
+)
 
 type QueryExecutor interface {
-	RunQuery(qb QueryBuilder) error
-	RunQueryAndScanSingleResult(qb QueryBuilder, parser RowParser) error
-	RunQueryAndScanAllResults(qb QueryBuilder, parser RowParser) error
+	RunQuery(ctx context.Context, qb QueryBuilder) error
+	RunQueryAndScanSingleResult(ctx context.Context, qb QueryBuilder, parser RowParser) error
+	RunQueryAndScanAllResults(ctx context.Context, qb QueryBuilder, parser RowParser) error
 }
 
 type queryExecutorImpl struct {
@@ -18,8 +22,8 @@ func NewQueryExecutor(db Database) QueryExecutor {
 	}
 }
 
-func (qe *queryExecutorImpl) RunQuery(qb QueryBuilder) error {
-	rows, err := qe.runQueryAndReturnRows(qb)
+func (qe *queryExecutorImpl) RunQuery(ctx context.Context, qb QueryBuilder) error {
+	rows, err := qe.runQueryAndReturnRows(ctx, qb)
 	if err != nil {
 		return err
 	}
@@ -28,8 +32,8 @@ func (qe *queryExecutorImpl) RunQuery(qb QueryBuilder) error {
 	return nil
 }
 
-func (qe *queryExecutorImpl) RunQueryAndScanSingleResult(qb QueryBuilder, parser RowParser) error {
-	rows, err := qe.runQueryAndReturnRows(qb)
+func (qe *queryExecutorImpl) RunQueryAndScanSingleResult(ctx context.Context, qb QueryBuilder, parser RowParser) error {
+	rows, err := qe.runQueryAndReturnRows(ctx, qb)
 	if err != nil {
 		return err
 	}
@@ -43,8 +47,8 @@ func (qe *queryExecutorImpl) RunQueryAndScanSingleResult(qb QueryBuilder, parser
 	return nil
 }
 
-func (qe *queryExecutorImpl) RunQueryAndScanAllResults(qb QueryBuilder, parser RowParser) error {
-	rows, err := qe.runQueryAndReturnRows(qb)
+func (qe *queryExecutorImpl) RunQueryAndScanAllResults(ctx context.Context, qb QueryBuilder, parser RowParser) error {
+	rows, err := qe.runQueryAndReturnRows(ctx, qb)
 	if err != nil {
 		return err
 	}
@@ -58,13 +62,13 @@ func (qe *queryExecutorImpl) RunQueryAndScanAllResults(qb QueryBuilder, parser R
 	return nil
 }
 
-func (qe *queryExecutorImpl) runQueryAndReturnRows(qb QueryBuilder) (Rows, error) {
+func (qe *queryExecutorImpl) runQueryAndReturnRows(ctx context.Context, qb QueryBuilder) (Rows, error) {
 	query, err := qb.Build()
 	if err != nil {
 		return nil, errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
 	}
 
-	rows := qe.db.Query(query)
+	rows := qe.db.Query(ctx, query)
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}

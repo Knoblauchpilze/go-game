@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -37,11 +38,11 @@ func main() {
 	repo := users.NewDbRepository(qe)
 	r := createServerRouter(repo)
 
-	if err := connectToDbAndInstallCleanUp(database); err != nil {
+	if err := connectToDbAndInstallCleanUp(context.Background(), database); err != nil {
 		logger.Errorf("failed to connect to the db (err: %v)", err)
 		return
 	}
-	defer database.Disconnect()
+	defer database.Disconnect(context.Background())
 
 	logger.Infof("server pid: %d", os.Getpid())
 	logger.Infof("starting server on port %d...", port)
@@ -94,8 +95,8 @@ func createServerRouter(repo users.Repository) *chi.Mux {
 	return r
 }
 
-func connectToDbAndInstallCleanUp(db db.Database) error {
-	if err := db.Connect(); err != nil {
+func connectToDbAndInstallCleanUp(ctx context.Context, db db.Database) error {
+	if err := db.Connect(ctx); err != nil {
 		return err
 	}
 
@@ -105,7 +106,7 @@ func connectToDbAndInstallCleanUp(db db.Database) error {
 	go func() {
 		<-interruptChannel
 
-		db.Disconnect()
+		db.Disconnect(ctx)
 		os.Exit(1)
 	}()
 
