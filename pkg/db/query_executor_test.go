@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/KnoblauchPilze/go-game/pkg/errors"
@@ -14,7 +13,7 @@ func TestQueryExecutor_runQueryAndReturnRows_BuildError(t *testing.T) {
 
 	mdb := &mockDb{}
 	mqb := mockQueryBuilder{
-		buildErr: fmt.Errorf("someError"),
+		buildErr: errDefault,
 	}
 
 	qe := queryExecutorImpl{
@@ -24,7 +23,7 @@ func TestQueryExecutor_runQueryAndReturnRows_BuildError(t *testing.T) {
 	_, err := qe.runQueryAndReturnRows(context.TODO(), mqb)
 	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestCreationFailed))
 	cause := errors.Unwrap(err)
-	assert.Contains(cause.Error(), "someError")
+	assert.Equal(errDefault, cause)
 }
 
 func TestQueryExecutor_runQueryAndReturnRows_QueryError(t *testing.T) {
@@ -33,7 +32,7 @@ func TestQueryExecutor_runQueryAndReturnRows_QueryError(t *testing.T) {
 	mqb := mockQueryBuilder{}
 	mdb := &mockDb{
 		rows: &mockRows{
-			err: fmt.Errorf("someError"),
+			err: errDefault,
 		},
 	}
 
@@ -42,7 +41,7 @@ func TestQueryExecutor_runQueryAndReturnRows_QueryError(t *testing.T) {
 	}
 
 	_, err := qe.runQueryAndReturnRows(context.TODO(), mqb)
-	assert.Contains(err.Error(), "someError")
+	assert.Equal(errDefault, err)
 }
 
 func TestQueryExecutor_runQueryAndReturnRows(t *testing.T) {
@@ -86,14 +85,14 @@ func TestQueryExecutor_RunQuery_Error(t *testing.T) {
 	mqb := mockQueryBuilder{}
 	mdb := &mockDb{
 		rows: &mockRows{
-			err: fmt.Errorf("someError"),
+			err: errDefault,
 		},
 	}
 
 	qe := NewQueryExecutor(mdb)
 
 	err := qe.RunQuery(context.TODO(), mqb)
-	assert.Contains(err.Error(), "someError")
+	assert.Equal(errDefault, err)
 }
 
 func TestQueryExecutor_RunQueryAndScanSingleResult(t *testing.T) {
@@ -120,14 +119,14 @@ func TestQueryExecutor_RunQueryAndScanSingleResult_Error(t *testing.T) {
 	mqb := mockQueryBuilder{}
 	mdb := &mockDb{
 		rows: &mockRows{
-			err: fmt.Errorf("someError"),
+			err: errDefault,
 		},
 	}
 
 	qe := NewQueryExecutor(mdb)
 
 	err := qe.RunQueryAndScanSingleResult(context.TODO(), mqb, &mockParser{})
-	assert.Contains(err.Error(), "someError")
+	assert.Equal(errDefault, err)
 }
 
 func TestQueryExecutor_RunQueryAndScanSingleResult_ScanError(t *testing.T) {
@@ -135,7 +134,7 @@ func TestQueryExecutor_RunQueryAndScanSingleResult_ScanError(t *testing.T) {
 
 	mqb := mockQueryBuilder{}
 	mr := &mockRows{
-		getSingleValueErr: fmt.Errorf("someError"),
+		getSingleValueErr: errDefault,
 	}
 	mdb := &mockDb{
 		rows: mr,
@@ -146,7 +145,7 @@ func TestQueryExecutor_RunQueryAndScanSingleResult_ScanError(t *testing.T) {
 	err := qe.RunQueryAndScanSingleResult(context.TODO(), mqb, &mockParser{})
 	assert.True(errors.IsErrorWithCode(err, errors.ErrDbCorruptedData))
 	cause := errors.Unwrap(err)
-	assert.Contains(cause.Error(), "someError")
+	assert.Equal(errDefault, cause)
 	assert.Equal(1, mr.closeCalled)
 }
 
@@ -174,14 +173,14 @@ func TestQueryExecutor_RunQueryAndScanAllResults_Error(t *testing.T) {
 	mqb := mockQueryBuilder{}
 	mdb := &mockDb{
 		rows: &mockRows{
-			err: fmt.Errorf("someError"),
+			err: errDefault,
 		},
 	}
 
 	qe := NewQueryExecutor(mdb)
 
 	err := qe.RunQueryAndScanAllResults(context.TODO(), mqb, &mockParser{})
-	assert.Contains(err.Error(), "someError")
+	assert.Equal(errDefault, err)
 }
 
 func TestQueryExecutor_RunQueryAndScanAllResults_ScanError(t *testing.T) {
@@ -189,7 +188,7 @@ func TestQueryExecutor_RunQueryAndScanAllResults_ScanError(t *testing.T) {
 
 	mqb := mockQueryBuilder{}
 	mr := &mockRows{
-		getAllErr: fmt.Errorf("someError"),
+		getAllErr: errDefault,
 	}
 	mdb := &mockDb{
 		rows: mr,
@@ -200,7 +199,7 @@ func TestQueryExecutor_RunQueryAndScanAllResults_ScanError(t *testing.T) {
 	err := qe.RunQueryAndScanAllResults(context.TODO(), mqb, &mockParser{})
 	assert.True(errors.IsErrorWithCode(err, errors.ErrDbCorruptedData))
 	cause := errors.Unwrap(err)
-	assert.Contains(cause.Error(), "someError")
+	assert.Equal(errDefault, cause)
 	assert.Equal(1, mr.closeCalled)
 }
 

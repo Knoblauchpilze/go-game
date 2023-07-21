@@ -143,5 +143,5 @@ func TestUpdateQueryBuilder_Build_ArgWithError(t *testing.T) {
 	_, err := b.Build()
 	assert.True(errors.IsErrorWithCode(err, errors.ErrSqlTranslationFailed))
 	cause := errors.Unwrap(err)
-	assert.True(strings.Contains(cause.Error(), "someError"))
+	assert.True(strings.Contains(cause.Error(), errDefault.Error()))
 }

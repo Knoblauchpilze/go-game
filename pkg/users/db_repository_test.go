@@ -12,6 +12,7 @@ import (
 )
 
 var defaultTestUser = User{Id: uuid.MustParse("08ce96a3-3430-48a8-a3b2-b1c987a207ca"), Mail: "some@mail", Name: "someName", Password: "somePassword"}
+var errDefault = fmt.Errorf("someError")
 
 func TestDbRepository_CreateUser_InvalidMail(t *testing.T) {
 	assert := assert.New(t)
@@ -49,14 +50,14 @@ func TestDbRepository_CreateUser_QueryExecutorError(t *testing.T) {
 	assert := assert.New(t)
 
 	mqe := &mockQueryExecutor{
-		runQueryErr: fmt.Errorf("someError"),
+		runQueryErr: errDefault,
 	}
 	repo := NewDbRepository(mqe)
 
 	_, err := repo.Create(context.TODO(), defaultTestUser)
 	assert.True(errors.IsErrorWithCode(err, errors.ErrUserCreationFailure))
 	cause := errors.Unwrap(err)
-	assert.Contains(cause.Error(), "someError")
+	assert.Equal(errDefault, cause)
 }
 
 func TestDbRepository_CreateUser(t *testing.T) {
@@ -81,14 +82,14 @@ func TestDbRepository_GetUser_QueryExecutorError(t *testing.T) {
 	assert := assert.New(t)
 
 	mqe := &mockQueryExecutor{
-		runQueryAndScanSingleResultErr: fmt.Errorf("someError"),
+		runQueryAndScanSingleResultErr: errDefault,
 	}
 	repo := NewDbRepository(mqe)
 
 	_, err := repo.Get(context.TODO(), uuid.New())
 	assert.True(errors.IsErrorWithCode(err, errors.ErrUserGetFailure))
 	cause := errors.Unwrap(err)
-	assert.Equal("someError", cause.Error())
+	assert.Equal(errDefault, cause)
 }
 
 func TestDbRepository_GetUser_FilterBuildError(t *testing.T) {
@@ -99,7 +100,7 @@ func TestDbRepository_GetUser_FilterBuildError(t *testing.T) {
 	mqe := &mockQueryExecutor{}
 	inFilterBuilderFunc = func() db.InFilterBuilder {
 		return mockFilterBuilder{
-			buildErr: fmt.Errorf("someError"),
+			buildErr: errDefault,
 		}
 	}
 	repo := NewDbRepository(mqe)
@@ -107,7 +108,7 @@ func TestDbRepository_GetUser_FilterBuildError(t *testing.T) {
 	_, err := repo.Get(context.TODO(), uuid.New())
 	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestCreationFailed))
 	cause := errors.Unwrap(err)
-	assert.Equal("someError", cause.Error())
+	assert.Equal(errDefault, cause)
 }
 
 func TestDbRepository_GetUser(t *testing.T) {
@@ -131,14 +132,14 @@ func TestDbRepository_Delete_QueryExecutorError(t *testing.T) {
 	assert := assert.New(t)
 
 	mqe := &mockQueryExecutor{
-		runQueryErr: fmt.Errorf("someError"),
+		runQueryErr: errDefault,
 	}
 	repo := NewDbRepository(mqe)
 
 	err := repo.Delete(context.TODO(), uuid.New())
 	assert.True(errors.IsErrorWithCode(err, errors.ErrUserDeletionFailure))
 	cause := errors.Unwrap(err)
-	assert.Equal("someError", cause.Error())
+	assert.Equal(errDefault, cause)
 }
 
 func TestDbRepository_Delete_FilterBuildError(t *testing.T) {
@@ -148,7 +149,7 @@ func TestDbRepository_Delete_FilterBuildError(t *testing.T) {
 	mqe := &mockQueryExecutor{}
 	inFilterBuilderFunc = func() db.InFilterBuilder {
 		return mockFilterBuilder{
-			buildErr: fmt.Errorf("someError"),
+			buildErr: errDefault,
 		}
 	}
 	repo := NewDbRepository(mqe)
@@ -156,7 +157,7 @@ func TestDbRepository_Delete_FilterBuildError(t *testing.T) {
 	err := repo.Delete(context.TODO(), uuid.New())
 	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestCreationFailed))
 	cause := errors.Unwrap(err)
-	assert.Equal("someError", cause.Error())
+	assert.Equal(errDefault, cause)
 }
 
 func TestDbRepository_Delete(t *testing.T) {
@@ -180,14 +181,14 @@ func TestDbRepository_GetAll_QueryExecutorError(t *testing.T) {
 	assert := assert.New(t)
 
 	mqe := &mockQueryExecutor{
-		runQueryAndScanAllResultsErr: fmt.Errorf("someError"),
+		runQueryAndScanAllResultsErr: errDefault,
 	}
 	repo := NewDbRepository(mqe)
 
 	_, err := repo.GetAll(context.TODO())
 	assert.True(errors.IsErrorWithCode(err, errors.ErrUserGetFailure))
 	cause := errors.Unwrap(err)
-	assert.Equal("someError", cause.Error())
+	assert.Equal(errDefault, cause)
 }
 
 func TestDbRepository_GetAll(t *testing.T) {

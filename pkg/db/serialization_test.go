@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -64,7 +63,7 @@ func TestArgToStr_ComplexArg(t *testing.T) {
 type mockUnmarshalable struct{}
 
 func (mu mockUnmarshalable) MarshalJSON() ([]byte, error) {
-	return nil, fmt.Errorf("someError")
+	return nil, errDefault
 }
 
 func TestArgToStr_Unmarshalable(t *testing.T) {
@@ -73,7 +72,7 @@ func TestArgToStr_Unmarshalable(t *testing.T) {
 	arg := mockUnmarshalable{}
 
 	_, err := argToStr(arg)
-	assert.Contains(err.Error(), "someError")
+	assert.Contains(err.Error(), errDefault.Error())
 }
 
 type mockUnmarshalableConvertible struct{}
@@ -88,7 +87,7 @@ func TestArgToStr_UnmarshalableConvertible(t *testing.T) {
 	arg := mockUnmarshalableConvertible{}
 
 	_, err := argToStr(arg)
-	assert.Contains(err.Error(), "someError")
+	assert.Contains(err.Error(), errDefault.Error())
 }
 
 func TestSqlPropAsUpdateToStr(t *testing.T) {
@@ -113,5 +112,5 @@ func TestSqlPropAsUpdateToStr_Unmarshalable(t *testing.T) {
 	}
 
 	_, err := sqlPropAsUpdateToStr(update)
-	assert.Contains(err.Error(), "someError")
+	assert.Contains(err.Error(), errDefault.Error())
 }
