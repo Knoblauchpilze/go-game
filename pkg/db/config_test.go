@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"net"
 	"testing"
 
@@ -25,13 +24,13 @@ func TestConfig_Create(t *testing.T) {
 		ConnConfig: pgx.ConnConfig{
 			Host: "host",
 			Dial: func(network, addr string) (net.Conn, error) {
-				return nil, fmt.Errorf("someError")
+				return nil, errDefault
 			},
 		},
 	}
 
 	_, err := conf.creationFunc(pgxConf)
-	assert.Equal("someError", err.Error())
+	assert.Equal(errDefault, err)
 }
 
 func TestConfig_Valid(t *testing.T) {
