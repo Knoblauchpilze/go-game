@@ -12,7 +12,7 @@ type Process func() error
 var errorLog = logger.ScopedErrorf
 var traceLog = logger.ScopedTracef
 
-func ExecuteWithContext(process Process, ctx context.Context, timeout time.Duration) ExecutionResult {
+func ExecuteWithContext(process Process, ctx context.Context, timeout time.Duration) error {
 	if timeout == 0 {
 		return executeWithNoTimeout(process)
 	}
@@ -20,37 +20,32 @@ func ExecuteWithContext(process Process, ctx context.Context, timeout time.Durat
 	return executeWithTimeout(process, ctx, timeout)
 }
 
-func executeWithNoTimeout(process Process) ExecutionResult {
-	var out ExecutionResult
-	out.ProcessErr = process()
-	return out
+func executeWithNoTimeout(process Process) error {
+	return process()
 }
 
-func executeWithTimeout(process Process, ctx context.Context, timeout time.Duration) ExecutionResult {
-	var out ExecutionResult
-
+func executeWithTimeout(process Process, ctx context.Context, timeout time.Duration) error {
+	// https://medium.com/geekculture/timeout-context-in-go-e88af0abd08d
 	decoratedCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	processDone := make(chan bool, 1)
-	shouldLog := false
 	start := time.Now()
 
+	var errP error
 	go func() {
-		out.ProcessErr = process()
+		errP = process()
 		processDone <- true
-		if shouldLog {
-			errorLog(ctx, "process finished after %+v (greater than %+v available)", time.Since(start), timeout)
-		}
 	}()
 
+	var err error
 	select {
 	case <-decoratedCtx.Done():
-		out.ExecutionErr = decoratedCtx.Err()
-		shouldLog = true
-		errorLog(ctx, "processed didn't finish after %+v (err: %+v)", timeout, out.ExecutionErr)
+		err = decoratedCtx.Err()
+		errorLog(ctx, "process didn't finish after %+v (err: %+v)", timeout, err)
 	case <-processDone:
+		err = errP
 		traceLog(ctx, "executed process after %+v", time.Since(start))
 	}
 
-	return out
+	return err
 }
