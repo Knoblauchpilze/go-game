@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -55,7 +56,7 @@ func TestPostgresDatabase_Connect(t *testing.T) {
 	}
 
 	db := NewPostgresDatabase(config)
-	err := db.Connect()
+	err := db.Connect(context.TODO())
 	assert.Nil(err)
 }
 
@@ -69,7 +70,7 @@ func TestPostgresDatabase_Connect_Fail(t *testing.T) {
 
 	db := NewPostgresDatabase(config)
 
-	err := db.Connect()
+	err := db.Connect(context.TODO())
 	assert.True(errors.IsErrorWithCode(err, errors.ErrDbConnectionFailed))
 	cause := errors.Unwrap(err)
 	assert.Equal("someError", cause.Error())
@@ -80,7 +81,7 @@ func TestPostgresDatabase_Disconnect_NotConnected(t *testing.T) {
 
 	db := NewPostgresDatabase(testConfig)
 
-	err := db.Disconnect()
+	err := db.Disconnect(context.TODO())
 	assert.Nil(err)
 }
 
@@ -92,11 +93,12 @@ func TestPostgresDatabase_Disconnect(t *testing.T) {
 	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
 		return &mockDb, nil
 	}
+	ctx := context.TODO()
 
 	db := NewPostgresDatabase(config)
-	db.Connect()
+	db.Connect(ctx)
 
-	err := db.Disconnect()
+	err := db.Disconnect(ctx)
 	assert.Nil(err)
 	assert.Equal(1, mockDb.closeCalled)
 }
@@ -107,7 +109,7 @@ func TestPostgresDatabase_Query_NotConnected(t *testing.T) {
 	db := NewPostgresDatabase(testConfig)
 
 	q := queryImpl{}
-	rows := db.Query(q)
+	rows := db.Query(context.TODO(), q)
 	assert.True(errors.IsErrorWithCode(rows.Err(), errors.ErrDbConnectionInvalid))
 }
 
@@ -119,12 +121,13 @@ func TestPostgresDatabase_Query_Invalid(t *testing.T) {
 	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
 		return &mockDb, nil
 	}
+	ctx := context.TODO()
 
 	db := NewPostgresDatabase(config)
-	db.Connect()
+	db.Connect(ctx)
 
 	q := queryImpl{}
-	rows := db.Query(q)
+	rows := db.Query(ctx, q)
 	assert.True(errors.IsErrorWithCode(rows.Err(), errors.ErrInvalidQuery))
 }
 
@@ -136,14 +139,15 @@ func TestPostgresDatabase_Query(t *testing.T) {
 	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
 		return &mockDb, nil
 	}
+	ctx := context.TODO()
 
 	db := NewPostgresDatabase(config)
-	db.Connect()
+	db.Connect(ctx)
 
 	q := queryImpl{
 		sqlCode: "someSqlCode",
 	}
-	rows := db.Query(q)
+	rows := db.Query(ctx, q)
 	assert.Nil(rows.Err())
 	assert.Equal(1, len(mockDb.sqlQueriesReceived))
 	assert.Equal("someSqlCode", mockDb.sqlQueriesReceived[0])
@@ -157,15 +161,16 @@ func TestPostgresDatabase_Query_Verbose(t *testing.T) {
 	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
 		return &mockDb, nil
 	}
+	ctx := context.TODO()
 
 	db := NewPostgresDatabase(config)
-	db.Connect()
+	db.Connect(ctx)
 
 	q := queryImpl{
 		sqlCode: "someSqlCode",
 		verbose: true,
 	}
-	rows := db.Query(q)
+	rows := db.Query(ctx, q)
 	assert.Nil(rows.Err())
 	assert.Equal(1, len(mockDb.sqlQueriesReceived))
 	assert.Equal("someSqlCode", mockDb.sqlQueriesReceived[0])
@@ -181,14 +186,15 @@ func TestPostgresDatabase_Query_Fail(t *testing.T) {
 	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
 		return &mockDb, nil
 	}
+	ctx := context.TODO()
 
 	db := NewPostgresDatabase(config)
-	db.Connect()
+	db.Connect(ctx)
 
 	q := queryImpl{
 		sqlCode: "someSqlCode",
 	}
-	rows := db.Query(q)
+	rows := db.Query(ctx, q)
 	assert.True(errors.IsErrorWithCode(rows.Err(), errors.ErrDbRequestFailed))
 	cause := errors.Unwrap(rows.Err())
 	assert.Equal("someError", cause.Error())
@@ -200,7 +206,7 @@ func TestPostgresDatabase_Execute_NotConnected(t *testing.T) {
 	db := NewPostgresDatabase(testConfig)
 
 	q := queryImpl{}
-	rows := db.Execute(q)
+	rows := db.Execute(context.TODO(), q)
 	assert.True(errors.IsErrorWithCode(rows.Err, errors.ErrDbConnectionInvalid))
 }
 
@@ -212,12 +218,13 @@ func TestPostgresDatabase_Execute_Invalid(t *testing.T) {
 	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
 		return &mockDb, nil
 	}
+	ctx := context.TODO()
 
 	db := NewPostgresDatabase(config)
-	db.Connect()
+	db.Connect(ctx)
 
 	q := queryImpl{}
-	rows := db.Execute(q)
+	rows := db.Execute(ctx, q)
 	assert.True(errors.IsErrorWithCode(rows.Err, errors.ErrInvalidQuery))
 }
 
@@ -229,14 +236,38 @@ func TestPostgresDatabase_Execute(t *testing.T) {
 	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
 		return &mockDb, nil
 	}
+	ctx := context.TODO()
 
 	db := NewPostgresDatabase(config)
-	db.Connect()
+	db.Connect(ctx)
 
 	q := queryImpl{
 		sqlCode: "someSqlCode",
 	}
-	result := db.Execute(q)
+	result := db.Execute(ctx, q)
+	assert.Nil(result.Err)
+	assert.Equal(1, len(mockDb.sqlExecuteReceived))
+	assert.Equal("someSqlCode", mockDb.sqlExecuteReceived[0])
+}
+
+func TestPostgresDatabase_Execute_Verbose(t *testing.T) {
+	assert := assert.New(t)
+
+	config := testConfig
+	mockDb := mockPgxDbFacade{}
+	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
+		return &mockDb, nil
+	}
+	ctx := context.TODO()
+
+	db := NewPostgresDatabase(config)
+	db.Connect(ctx)
+
+	q := queryImpl{
+		sqlCode: "someSqlCode",
+		verbose: true,
+	}
+	result := db.Execute(ctx, q)
 	assert.Nil(result.Err)
 	assert.Equal(1, len(mockDb.sqlExecuteReceived))
 	assert.Equal("someSqlCode", mockDb.sqlExecuteReceived[0])
@@ -252,14 +283,15 @@ func TestPostgresDatabase_Execute_Fail(t *testing.T) {
 	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
 		return &mockDb, nil
 	}
+	ctx := context.TODO()
 
 	db := NewPostgresDatabase(config)
-	db.Connect()
+	db.Connect(ctx)
 
 	q := queryImpl{
 		sqlCode: "someSqlCode",
 	}
-	result := db.Execute(q)
+	result := db.Execute(ctx, q)
 	assert.True(errors.IsErrorWithCode(result.Err, errors.ErrDbRequestFailed))
 	cause := errors.Unwrap(result.Err)
 	assert.Equal("someError", cause.Error())

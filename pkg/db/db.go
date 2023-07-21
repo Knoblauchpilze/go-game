@@ -1,10 +1,12 @@
 package db
 
+import "context"
+
 // See here:
 type Database interface {
-	Connect() error
-	Disconnect() error
+	Connect(ctx context.Context) error
+	Disconnect(ctx context.Context) error
 
-	Query(query Query) Rows
-	Execute(query Query) Result
+	Query(ctx context.Context, query Query) Rows
+	Execute(ctx context.Context, query Query) Result
 }

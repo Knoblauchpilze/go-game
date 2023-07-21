@@ -1,6 +1,8 @@
 package users
 
 import (
+	"context"
+
 	"github.com/KnoblauchPilze/go-game/pkg/db"
 	"github.com/KnoblauchPilze/go-game/pkg/errors"
 	"github.com/google/uuid"
@@ -29,7 +31,7 @@ func NewDbRepository(qe db.QueryExecutor) Repository {
 	}
 }
 
-func (repo *userDbRepo) Create(user User) (uuid.UUID, error) {
+func (repo *userDbRepo) Create(ctx context.Context, user User) (uuid.UUID, error) {
 	out := user.Id
 	if err := user.validate(); err != nil {
 		return out, err
@@ -46,14 +48,14 @@ func (repo *userDbRepo) Create(user User) (uuid.UUID, error) {
 
 	qb.SetVerbose(true)
 
-	if err := repo.qe.RunQuery(qb); err != nil {
+	if err := repo.qe.RunQuery(ctx, qb); err != nil {
 		return out, errors.WrapCode(err, errors.ErrUserCreationFailure)
 	}
 
 	return out, nil
 }
 
-func (repo *userDbRepo) Get(id uuid.UUID) (User, error) {
+func (repo *userDbRepo) Get(ctx context.Context, id uuid.UUID) (User, error) {
 	qb := selectQueryBuilderFunc()
 
 	qb.SetTable(userTableName)
@@ -77,14 +79,14 @@ func (repo *userDbRepo) Get(id uuid.UUID) (User, error) {
 	qb.SetVerbose(true)
 
 	scanner := &userRowParser{}
-	if err := repo.qe.RunQueryAndScanSingleResult(qb, scanner); err != nil {
+	if err := repo.qe.RunQueryAndScanSingleResult(ctx, qb, scanner); err != nil {
 		return User{}, errors.WrapCode(err, errors.ErrUserGetFailure)
 	}
 
 	return scanner.user, nil
 }
 
-func (repo *userDbRepo) Delete(id uuid.UUID) error {
+func (repo *userDbRepo) Delete(ctx context.Context, id uuid.UUID) error {
 	qb := deleteQueryBuilderFunc()
 
 	qb.SetTable(userTableName)
@@ -101,14 +103,14 @@ func (repo *userDbRepo) Delete(id uuid.UUID) error {
 
 	qb.SetVerbose(true)
 
-	if err := repo.qe.RunQuery(qb); err != nil {
+	if err := repo.qe.RunQuery(ctx, qb); err != nil {
 		return errors.WrapCode(err, errors.ErrUserDeletionFailure)
 	}
 
 	return nil
 }
 
-func (repo *userDbRepo) GetAll() ([]uuid.UUID, error) {
+func (repo *userDbRepo) GetAll(ctx context.Context) ([]uuid.UUID, error) {
 	qb := selectQueryBuilderFunc()
 	qb.SetTable("users")
 
@@ -117,7 +119,7 @@ func (repo *userDbRepo) GetAll() ([]uuid.UUID, error) {
 	qb.SetVerbose(true)
 
 	scanner := &userIdsParser{}
-	if err := repo.qe.RunQueryAndScanAllResults(qb, scanner); err != nil {
+	if err := repo.qe.RunQueryAndScanAllResults(ctx, qb, scanner); err != nil {
 		return []uuid.UUID{}, errors.WrapCode(err, errors.ErrUserGetFailure)
 	}
 
