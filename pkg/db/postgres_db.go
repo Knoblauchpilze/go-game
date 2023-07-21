@@ -111,16 +111,17 @@ func (db *postgresDb) Query(ctx context.Context, query Query) Rows {
 		},
 		CleanUpIfFailFunc: func() {
 			logger.ScopedTracef(ctx, "closing rows after query failure")
-			rows.Close()
+			// TODO: Reactivate this
+			// rows.Close()
 		},
 	}
 
 	err := common.ExecuteWithContext(p, ctx, db.config.DbQueryTimeout)
 	if err != nil {
 		if err == context.DeadlineExceeded {
-			return newRows(rows, errors.WrapCode(err, errors.ErrDbConnectionTimeout))
+			return newRows(nil, errors.WrapCode(err, errors.ErrDbRequestTimeout))
 		}
-		return newRows(rows, errors.WrapCode(err, errors.ErrDbRequestFailed))
+		return newRows(nil, errors.WrapCode(err, errors.ErrDbRequestFailed))
 	}
 
 	return newRows(rows, nil)
@@ -147,11 +148,25 @@ func (db *postgresDb) Execute(ctx context.Context, query Query) Result {
 		logger.ScopedTracef(ctx, "executing: %s", query.ToSql())
 	}
 
-	var err error
-	out.tag, err = db.pool.Exec(sqlQuery)
-	if err != nil {
-		out.Err = errors.WrapCode(err, errors.ErrDbRequestFailed)
+	var tag pgx.CommandTag
+	p := common.Process{
+		WorkFunc: func() error {
+			var err error
+			tag, err = db.pool.Exec(sqlQuery)
+			return err
+		},
 	}
 
+	err := common.ExecuteWithContext(p, ctx, db.config.DbQueryTimeout)
+	if err != nil {
+		if err == context.DeadlineExceeded {
+			out.Err = errors.WrapCode(err, errors.ErrDbRequestTimeout)
+			return out
+		}
+		out.Err = errors.WrapCode(err, errors.ErrDbRequestFailed)
+		return out
+	}
+
+	out.tag = tag
 	return out
 }
