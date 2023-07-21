@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/KnoblauchPilze/go-game/pkg/errors"
 	"github.com/jackc/pgx"
@@ -74,6 +75,25 @@ func TestPostgresDatabase_Connect_Fail(t *testing.T) {
 	assert.True(errors.IsErrorWithCode(err, errors.ErrDbConnectionFailed))
 	cause := errors.Unwrap(err)
 	assert.Equal("someError", cause.Error())
+}
+
+func TestPostgresDatabase_Connect_Timeout(t *testing.T) {
+	assert := assert.New(t)
+
+	timeout := 100 * time.Millisecond
+	config := testConfig
+	config.DbConnectionTimeout = timeout
+	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
+		time.Sleep(2 * timeout)
+		return &mockPgxDbFacade{}, nil
+	}
+
+	db := NewPostgresDatabase(config)
+
+	err := db.Connect(context.TODO())
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbConnectionTimeout))
+	cause := errors.Unwrap(err)
+	assert.Equal(context.DeadlineExceeded, cause)
 }
 
 func TestPostgresDatabase_Disconnect_NotConnected(t *testing.T) {

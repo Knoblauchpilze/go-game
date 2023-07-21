@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx"
 )
@@ -15,6 +16,7 @@ type Config struct {
 	DbUser                string
 	DbPassword            string
 	DbConnectionsPoolSize uint
+	DbConnectionTimeout   time.Duration
 	creationFunc          CreationFunc
 }
 

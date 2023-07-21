@@ -2,8 +2,10 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
+	"github.com/KnoblauchPilze/go-game/pkg/common"
 	"github.com/KnoblauchPilze/go-game/pkg/errors"
 	"github.com/KnoblauchPilze/go-game/pkg/logger"
 	"github.com/jackc/pgx"
@@ -28,6 +30,8 @@ func NewPostgresDatabase(conf Config) Database {
 func (db *postgresDb) Connect(ctx context.Context) error {
 	logger.ScopedInfof(ctx, "connection attempt to %s", db.config)
 
+	fmt.Printf("%+v\n", db.config.DbConnectionTimeout)
+
 	pgxConf := pgx.ConnPoolConfig{
 		ConnConfig: pgx.ConnConfig{
 			Host:     db.config.DbHost,
@@ -40,8 +44,18 @@ func (db *postgresDb) Connect(ctx context.Context) error {
 		AcquireTimeout: 0,
 	}
 
-	pool, err := db.config.creationFunc(pgxConf)
-	if err != nil {
+	var pool pgxDbFacade
+	connFunc := func() error {
+		var err error
+		pool, err = db.config.creationFunc(pgxConf)
+		return err
+	}
+
+	res := common.ExecuteWithContext(connFunc, ctx, db.config.DbConnectionTimeout)
+	if err := res.Error(); err != nil {
+		if err == context.DeadlineExceeded {
+			return errors.WrapCode(err, errors.ErrDbConnectionTimeout)
+		}
 		return errors.WrapCode(err, errors.ErrDbConnectionFailed)
 	}
 
