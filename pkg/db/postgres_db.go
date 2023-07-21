@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/KnoblauchPilze/go-game/pkg/common"
@@ -30,8 +29,6 @@ func NewPostgresDatabase(conf Config) Database {
 func (db *postgresDb) Connect(ctx context.Context) error {
 	logger.ScopedInfof(ctx, "connection attempt to %s", db.config)
 
-	fmt.Printf("%+v\n", db.config.DbConnectionTimeout)
-
 	pgxConf := pgx.ConnPoolConfig{
 		ConnConfig: pgx.ConnConfig{
 			Host:     db.config.DbHost,
@@ -45,13 +42,15 @@ func (db *postgresDb) Connect(ctx context.Context) error {
 	}
 
 	var pool pgxDbFacade
-	connFunc := func() error {
-		var err error
-		pool, err = db.config.creationFunc(pgxConf)
-		return err
+	p := common.Process{
+		WorkFunc: func() error {
+			var err error
+			pool, err = db.config.creationFunc(pgxConf)
+			return err
+		},
 	}
 
-	err := common.ExecuteWithContext(connFunc, ctx, db.config.DbConnectionTimeout)
+	err := common.ExecuteWithContext(p, ctx, db.config.DbConnectionTimeout)
 	if err != nil {
 		if err == context.DeadlineExceeded {
 			return errors.WrapCode(err, errors.ErrDbConnectionTimeout)
@@ -103,10 +102,25 @@ func (db *postgresDb) Query(ctx context.Context, query Query) Rows {
 		logger.ScopedTracef(ctx, "executing: %s", query.ToSql())
 	}
 
-	var err error
-	rows, err := db.pool.Query(sqlQuery)
+	var rows *pgx.Rows
+	p := common.Process{
+		WorkFunc: func() error {
+			var err error
+			rows, err = db.pool.Query(sqlQuery)
+			return err
+		},
+		CleanUpIfFailFunc: func() {
+			logger.ScopedTracef(ctx, "closing rows after query failure")
+			rows.Close()
+		},
+	}
+
+	err := common.ExecuteWithContext(p, ctx, db.config.DbQueryTimeout)
 	if err != nil {
-		return newRows(nil, errors.WrapCode(err, errors.ErrDbRequestFailed))
+		if err == context.DeadlineExceeded {
+			return newRows(rows, errors.WrapCode(err, errors.ErrDbConnectionTimeout))
+		}
+		return newRows(rows, errors.WrapCode(err, errors.ErrDbRequestFailed))
 	}
 
 	return newRows(rows, nil)

@@ -81,6 +81,7 @@ func createDb() db.Database {
 	dbConf.DbPassword = viper.GetString("Database.Password")
 	dbConf.DbConnectionsPoolSize = viper.GetUint("Database.ConnectionsPoolSize")
 	dbConf.DbConnectionTimeout = viper.GetDuration("Database.ConnectionTimeout")
+	dbConf.DbQueryTimeout = viper.GetDuration("Database.QueryTimeout")
 
 	return db.NewPostgresDatabase(dbConf)
 }
