@@ -49,6 +49,7 @@ const (
 	ErrDbCorruptedData
 	ErrDbRequestCreationFailed
 	ErrDbRequestFailed
+	ErrDbRequestTimeout
 	ErrMultiValuedDbElement
 	ErrInvalidSqlQueryReceiverType
 	ErrNoRowsReturnedForSqlQuery
@@ -105,6 +106,7 @@ var errorsCodeToMessage = map[ErrorCode]string{
 	ErrDbCorruptedData:             "failed to interpret data from database",
 	ErrDbRequestCreationFailed:     "failed to create database request",
 	ErrDbRequestFailed:             "failed to query data from database",
+	ErrDbRequestTimeout:            "query to database timed out",
 	ErrMultiValuedDbElement:        "multiple values for expected unique database entry",
 	ErrInvalidSqlQueryReceiverType: "invalid receiver of a sql query",
 	ErrNoRowsReturnedForSqlQuery:   "sql query returned no rows",

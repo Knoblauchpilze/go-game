@@ -17,6 +17,7 @@ type Config struct {
 	DbPassword            string
 	DbConnectionsPoolSize uint
 	DbConnectionTimeout   time.Duration
+	DbQueryTimeout        time.Duration
 	creationFunc          CreationFunc
 }
 

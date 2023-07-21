@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -11,16 +12,15 @@ import (
 )
 
 var errDefault = fmt.Errorf("someError")
+var defaultSleep = 100 * time.Millisecond
 
 func TestExecuteWithNoTimeout(t *testing.T) {
 	assert := assert.New(t)
 
-	p := func() error { return nil }
-	err := executeWithNoTimeout(p)
+	err := executeWithNoTimeout(newProcess())
 	assert.Nil(err)
 
-	p = func() error { return errDefault }
-	err = executeWithNoTimeout(p)
+	err = executeWithNoTimeout(newProcessWithError())
 	assert.Equal(errDefault, err)
 }
 
@@ -29,12 +29,10 @@ func TestExecuteWithContext_NoTimeout(t *testing.T) {
 
 	ctx := context.TODO()
 
-	p := func() error { return nil }
-	err := ExecuteWithContext(p, ctx, 0)
+	err := ExecuteWithContext(newProcess(), ctx, 0)
 	assert.Nil(err)
 
-	p = func() error { return errDefault }
-	err = ExecuteWithContext(p, ctx, 0)
+	err = ExecuteWithContext(newProcessWithError(), ctx, 0)
 	assert.Equal(errDefault, err)
 }
 
@@ -42,20 +40,12 @@ func TestExecuteWithTimeout(t *testing.T) {
 	assert := assert.New(t)
 
 	ctx := context.TODO()
-	timeout := 100 * time.Millisecond
+	timeout := 2 * defaultSleep
 
-	p := func() error {
-		time.Sleep(timeout / 2)
-		return nil
-	}
-	err := executeWithTimeout(p, ctx, timeout)
+	err := executeWithTimeout(newProcessWithSleep(), ctx, timeout)
 	assert.Nil(err)
 
-	p = func() error {
-		time.Sleep(timeout / 2)
-		return fmt.Errorf("someError")
-	}
-	err = executeWithTimeout(p, ctx, timeout)
+	err = executeWithTimeout(newProcessWithSleepAndError(), ctx, timeout)
 	assert.Equal(errDefault, err)
 }
 
@@ -63,20 +53,12 @@ func TestExecuteWithTimeout_TimeoutExceeded(t *testing.T) {
 	assert := assert.New(t)
 
 	ctx := context.TODO()
-	timeout := 100 * time.Millisecond
+	timeout := defaultSleep / 2
 
-	p := func() error {
-		time.Sleep(2 * timeout)
-		return nil
-	}
-	err := executeWithTimeout(p, ctx, timeout)
+	err := executeWithTimeout(newProcessWithSleep(), ctx, timeout)
 	assert.Equal(context.DeadlineExceeded, err)
 
-	p = func() error {
-		time.Sleep(2 * timeout)
-		return fmt.Errorf("someError")
-	}
-	err = executeWithTimeout(p, ctx, timeout)
+	err = executeWithTimeout(newProcessWithSleepAndError(), ctx, timeout)
 	assert.Equal(context.DeadlineExceeded, err)
 }
 
@@ -85,17 +67,13 @@ func TestExecuteWithTimeout_TimeoutExceeded_ExpectLog(t *testing.T) {
 	t.Cleanup(resetLogFuncs)
 
 	ctx := context.TODO()
-	timeout := 100 * time.Millisecond
+	timeout := defaultSleep / 2
 	var actual string
 	errorLog = func(ctx context.Context, format string, args ...interface{}) {
 		actual = format
 	}
 
-	p := func() error {
-		time.Sleep(2 * timeout)
-		return nil
-	}
-	err := executeWithTimeout(p, ctx, timeout)
+	err := executeWithTimeout(newProcessWithSleep(), ctx, timeout)
 	// Safety to sleep at least the time it takes for the process to complete.
 	time.Sleep(2 * timeout)
 	assert.Equal(context.DeadlineExceeded, err)
@@ -105,7 +83,59 @@ func TestExecuteWithTimeout_TimeoutExceeded_ExpectLog(t *testing.T) {
 	assert.Equal(expected, actual[:len(expected)])
 }
 
+func TestExecuteWithTimeout_TimeoutExceeded_ExpectCleanUp(t *testing.T) {
+	assert := assert.New(t)
+
+	ctx := context.TODO()
+	timeout := defaultSleep / 2
+
+	p := newProcessWithSleep()
+	var cleanUpCalled atomic.Int32
+	p.CleanUpIfFailFunc = func() {
+		cleanUpCalled.Add(1)
+	}
+	err := executeWithTimeout(p, ctx, timeout)
+	// Safety to sleep at least the time it takes for the process to complete.
+	time.Sleep(2 * timeout)
+	assert.Equal(context.DeadlineExceeded, err)
+	assert.Equal(int32(1), cleanUpCalled.Load())
+}
+
 func resetLogFuncs() {
 	errorLog = logger.ScopedErrorf
 	traceLog = logger.ScopedTracef
+}
+
+func newProcess() Process {
+	return Process{
+		WorkFunc: func() error {
+			return nil
+		},
+	}
+}
+
+func newProcessWithError() Process {
+	return Process{
+		WorkFunc: func() error {
+			return errDefault
+		},
+	}
+}
+
+func newProcessWithSleep() Process {
+	return Process{
+		WorkFunc: func() error {
+			time.Sleep(defaultSleep)
+			return nil
+		},
+	}
+}
+
+func newProcessWithSleepAndError() Process {
+	return Process{
+		WorkFunc: func() error {
+			time.Sleep(defaultSleep)
+			return errDefault
+		},
+	}
 }
