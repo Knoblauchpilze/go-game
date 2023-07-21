@@ -10,18 +10,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var errDefault = fmt.Errorf("someError")
+
 func TestExecuteWithNoTimeout(t *testing.T) {
 	assert := assert.New(t)
 
 	p := func() error { return nil }
-	res := executeWithNoTimeout(p)
-	assert.Nil(res.ExecutionErr)
-	assert.Nil(res.ProcessErr)
+	err := executeWithNoTimeout(p)
+	assert.Nil(err)
 
-	p = func() error { return fmt.Errorf("someError") }
-	res = executeWithNoTimeout(p)
-	assert.Nil(res.ExecutionErr)
-	assert.Equal("someError", res.ProcessErr.Error())
+	p = func() error { return errDefault }
+	err = executeWithNoTimeout(p)
+	assert.Equal(errDefault, err)
 }
 
 func TestExecuteWithContext_NoTimeout(t *testing.T) {
@@ -30,14 +30,12 @@ func TestExecuteWithContext_NoTimeout(t *testing.T) {
 	ctx := context.TODO()
 
 	p := func() error { return nil }
-	res := ExecuteWithContext(p, ctx, 0)
-	assert.Nil(res.ExecutionErr)
-	assert.Nil(res.ProcessErr)
+	err := ExecuteWithContext(p, ctx, 0)
+	assert.Nil(err)
 
-	p = func() error { return fmt.Errorf("someError") }
-	res = ExecuteWithContext(p, ctx, 0)
-	assert.Nil(res.ExecutionErr)
-	assert.Equal("someError", res.ProcessErr.Error())
+	p = func() error { return errDefault }
+	err = ExecuteWithContext(p, ctx, 0)
+	assert.Equal(errDefault, err)
 }
 
 func TestExecuteWithTimeout(t *testing.T) {
@@ -50,17 +48,15 @@ func TestExecuteWithTimeout(t *testing.T) {
 		time.Sleep(timeout / 2)
 		return nil
 	}
-	res := executeWithTimeout(p, ctx, timeout)
-	assert.Nil(res.ExecutionErr)
-	assert.Nil(res.ProcessErr)
+	err := executeWithTimeout(p, ctx, timeout)
+	assert.Nil(err)
 
 	p = func() error {
 		time.Sleep(timeout / 2)
 		return fmt.Errorf("someError")
 	}
-	res = executeWithTimeout(p, ctx, timeout)
-	assert.Nil(res.ExecutionErr)
-	assert.Equal("someError", res.ProcessErr.Error())
+	err = executeWithTimeout(p, ctx, timeout)
+	assert.Equal(errDefault, err)
 }
 
 func TestExecuteWithTimeout_TimeoutExceeded(t *testing.T) {
@@ -73,17 +69,15 @@ func TestExecuteWithTimeout_TimeoutExceeded(t *testing.T) {
 		time.Sleep(2 * timeout)
 		return nil
 	}
-	res := executeWithTimeout(p, ctx, timeout)
-	assert.Equal(context.DeadlineExceeded, res.ExecutionErr)
-	assert.Nil(res.ProcessErr)
+	err := executeWithTimeout(p, ctx, timeout)
+	assert.Equal(context.DeadlineExceeded, err)
 
 	p = func() error {
 		time.Sleep(2 * timeout)
 		return fmt.Errorf("someError")
 	}
-	res = executeWithTimeout(p, ctx, timeout)
-	assert.Equal(context.DeadlineExceeded, res.ExecutionErr)
-	assert.Nil(res.ProcessErr)
+	err = executeWithTimeout(p, ctx, timeout)
+	assert.Equal(context.DeadlineExceeded, err)
 }
 
 func TestExecuteWithTimeout_TimeoutExceeded_ExpectLog(t *testing.T) {
@@ -101,13 +95,12 @@ func TestExecuteWithTimeout_TimeoutExceeded_ExpectLog(t *testing.T) {
 		time.Sleep(2 * timeout)
 		return nil
 	}
-	res := executeWithTimeout(p, ctx, timeout)
+	err := executeWithTimeout(p, ctx, timeout)
 	// Safety to sleep at least the time it takes for the process to complete.
 	time.Sleep(2 * timeout)
-	assert.Equal(context.DeadlineExceeded, res.ExecutionErr)
-	assert.Nil(res.ProcessErr)
+	assert.Equal(context.DeadlineExceeded, err)
 
-	expected := "process finished after "
+	expected := "process didn't finish after "
 	assert.Greater(len(actual), len(expected))
 	assert.Equal(expected, actual[:len(expected)])
 }

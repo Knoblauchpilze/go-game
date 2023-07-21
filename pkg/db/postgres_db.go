@@ -51,8 +51,8 @@ func (db *postgresDb) Connect(ctx context.Context) error {
 		return err
 	}
 
-	res := common.ExecuteWithContext(connFunc, ctx, db.config.DbConnectionTimeout)
-	if err := res.Error(); err != nil {
+	err := common.ExecuteWithContext(connFunc, ctx, db.config.DbConnectionTimeout)
+	if err != nil {
 		if err == context.DeadlineExceeded {
 			return errors.WrapCode(err, errors.ErrDbConnectionTimeout)
 		}

@@ -69,7 +69,7 @@ fi
 # Collect sub-folders recursively (including .).
 cd ${TEST_DIRECTORY}
 echo "Testing ${TEST_DIRECTORY}"
-go test ./...
+go test ./... -race
 
 # Register the exit code and propagate it if it is
 # non-zero (to indicate failure of the sub-program).
