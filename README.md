@@ -300,9 +300,7 @@ An important concept which we are taking from the [object relational mapping](ht
 
 From the business logic perspective, this is the entry point to the storage system where users are kept. We provided the basic creation/access/deletion methods to interact with users already in the system.
 
-This repository concept is declined in two different kinds:
-* a [memory repository](pkg/users/memory_repository.go), where everything is kept in memory.
-* a [database repository](pkg/users/db_repository.go), where we reuse what we described about the database interaction to store information in a separate database accessed by the server.
+This repository concept is declined in one main kind: a [database repository](pkg/users/db_repository.go), where we reuse what we described about the database interaction to store information in a separate database accessed by the server.
 
 # Executables
 
