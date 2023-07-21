@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"sync/atomic"
 	"testing"
 
@@ -15,8 +14,8 @@ func TestRows_Err(t *testing.T) {
 	r := newRows(nil, nil)
 	assert.Nil(r.Err())
 
-	r = newRows(nil, fmt.Errorf("someError"))
-	assert.Equal("someError", r.Err().Error())
+	r = newRows(nil, errDefault)
+	assert.Equal(errDefault, r.Err())
 }
 
 func TestRows_Close(t *testing.T) {
@@ -53,9 +52,9 @@ func TestRows_GetSingleValue_InvalidPreconditions(t *testing.T) {
 
 	mp := &mockParser{}
 
-	r := newRows(nil, fmt.Errorf("someError"))
+	r := newRows(nil, errDefault)
 	err := r.GetSingleValue(mp)
-	assert.Equal("someError", err.Error())
+	assert.Equal(errDefault, err)
 	assert.Equal(0, mp.parseCalled)
 
 	r = newRows(nil, nil)
@@ -93,7 +92,7 @@ func TestRows_GetSingleValue_ScannerError(t *testing.T) {
 	assert := assert.New(t)
 
 	mp := &mockParser{
-		parseErr: fmt.Errorf("someError"),
+		parseErr: errDefault,
 	}
 
 	m := &mockSqlRows{
@@ -103,7 +102,7 @@ func TestRows_GetSingleValue_ScannerError(t *testing.T) {
 	err := r.GetSingleValue(mp)
 	assert.True(errors.IsErrorWithCode(err, errors.ErrSqlRowParsingFailed))
 	cause := errors.Unwrap(err)
-	assert.Equal("someError", cause.Error())
+	assert.Equal(errDefault, cause)
 	assert.Equal(1, mp.parseCalled)
 }
 
@@ -123,9 +122,9 @@ func TestRows_GetAll_InvalidPreconditions(t *testing.T) {
 	assert := assert.New(t)
 
 	mp := &mockParser{}
-	r := newRows(nil, fmt.Errorf("someError"))
+	r := newRows(nil, errDefault)
 	err := r.GetAll(mp)
-	assert.Equal("someError", err.Error())
+	assert.Equal(errDefault, err)
 	assert.Equal(0, mp.parseCalled)
 }
 
@@ -176,7 +175,7 @@ func TestRows_GetAll_CallsClose(t *testing.T) {
 func TestRows_GetAll_ScannerError(t *testing.T) {
 	assert := assert.New(t)
 
-	mp := &mockParser{parseErr: fmt.Errorf("someError")}
+	mp := &mockParser{parseErr: errDefault}
 	m := &mockSqlRows{
 		numberOfRows: 2,
 	}
@@ -184,7 +183,7 @@ func TestRows_GetAll_ScannerError(t *testing.T) {
 	err := r.GetAll(mp)
 	assert.True(errors.IsErrorWithCode(err, errors.ErrSqlRowParsingFailed))
 	cause := errors.Unwrap(err)
-	assert.Equal("someError", cause.Error())
+	assert.Equal(errDefault, cause)
 	assert.Equal(1, mp.parseCalled)
 }
 
