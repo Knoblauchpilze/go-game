@@ -58,8 +58,11 @@ func (qe *queryExecutorImpl) ExecuteQueryAffectingSingleRow(ctx context.Context,
 		return err
 	}
 
-	if res.AffectedRows() != 1 {
+	if res.AffectedRows() == 0 {
 		return errors.NewCode(errors.ErrSqlQueryDidNotAffectSingleRow)
+	}
+	if res.AffectedRows() > 1 {
+		return errors.NewCode(errors.ErrSqlQueryAffectedMultipleRows)
 	}
 
 	return nil

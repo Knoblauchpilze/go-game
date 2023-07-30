@@ -273,7 +273,7 @@ func TestQueryExecutor_ExecuteQueryAffectingSingleRow_MultipleRowsAffected(t *te
 	qe := NewQueryExecutor(mdb)
 
 	err := qe.ExecuteQueryAffectingSingleRow(context.TODO(), mqb)
-	assert.True(errors.IsErrorWithCode(err, errors.ErrSqlQueryDidNotAffectSingleRow))
+	assert.True(errors.IsErrorWithCode(err, errors.ErrSqlQueryAffectedMultipleRows))
 }
 
 type mockQueryBuilder struct {

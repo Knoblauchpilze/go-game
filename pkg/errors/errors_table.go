@@ -55,7 +55,9 @@ const (
 	ErrNoRowsReturnedForSqlQuery
 	ErrSqlRowParsingFailed
 	ErrInvalidSqlCommandTag
+	ErrUnknownSqlCommandTag
 	ErrSqlQueryDidNotAffectSingleRow
+	ErrSqlQueryAffectedMultipleRows
 
 	ErrNotImplemented
 
@@ -114,7 +116,9 @@ var errorsCodeToMessage = map[ErrorCode]string{
 	ErrNoRowsReturnedForSqlQuery:     "sql query returned no rows",
 	ErrSqlRowParsingFailed:           "parsing of sql row failed",
 	ErrInvalidSqlCommandTag:          "invalid sql command tag returned",
+	ErrUnknownSqlCommandTag:          "unknown sql command tag returned",
 	ErrSqlQueryDidNotAffectSingleRow: "sql query did not affect a single row",
+	ErrSqlQueryAffectedMultipleRows:  "sql query affected multiple rows",
 
 	ErrNotImplemented: "not implemented",
 }

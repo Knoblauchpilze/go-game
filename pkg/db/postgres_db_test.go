@@ -253,7 +253,7 @@ func TestPostgresDatabase_Execute(t *testing.T) {
 
 	config := testConfig
 	mockDb := &mockPgxDbFacade{
-		tag: "insert 0 12",
+		tag: "INSERT 0 12",
 	}
 	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
 		return mockDb, nil
@@ -278,7 +278,7 @@ func TestPostgresDatabase_Execute_Verbose(t *testing.T) {
 
 	config := testConfig
 	mockDb := &mockPgxDbFacade{
-		tag: "insert 0 12",
+		tag: "INSERT 0 12",
 	}
 	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
 		return mockDb, nil

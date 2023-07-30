@@ -10,7 +10,7 @@ import (
 func TestResult_New(t *testing.T) {
 	assert := assert.New(t)
 
-	out := newResult("insert 0 12", nil)
+	out := newResult("INSERT 0 12", nil)
 	assert.Nil(out.Err())
 	assert.Equal(12, out.AffectedRows())
 }
@@ -18,7 +18,7 @@ func TestResult_New(t *testing.T) {
 func TestResult_New_WithError(t *testing.T) {
 	assert := assert.New(t)
 
-	out := newResult("insert 0 12", errDefault)
+	out := newResult("INSERT 0 12", errDefault)
 	assert.Equal(errDefault, out.Err())
 	assert.Equal(12, out.AffectedRows())
 }
