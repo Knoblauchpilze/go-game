@@ -50,7 +50,7 @@ func TestDbRepository_CreateUser_QueryExecutorError(t *testing.T) {
 	assert := assert.New(t)
 
 	mqe := &mockQueryExecutor{
-		runQueryErr: errDefault,
+		executeQueryErr: errDefault,
 	}
 	repo := NewDbRepository(mqe)
 
@@ -69,7 +69,7 @@ func TestDbRepository_CreateUser(t *testing.T) {
 	out, err := repo.Create(context.TODO(), defaultTestUser)
 	assert.Nil(err)
 	assert.Equal(defaultTestUser.Id, out)
-	assert.Equal(1, mqe.runQueryCalled)
+	assert.Equal(1, mqe.executeQueryCalled)
 	assert.Equal(1, len(mqe.queries))
 
 	q, err := mqe.queries[0].Build()
@@ -132,7 +132,7 @@ func TestDbRepository_Delete_QueryExecutorError(t *testing.T) {
 	assert := assert.New(t)
 
 	mqe := &mockQueryExecutor{
-		runQueryErr: errDefault,
+		executeQueryErr: errDefault,
 	}
 	repo := NewDbRepository(mqe)
 
@@ -168,7 +168,7 @@ func TestDbRepository_Delete(t *testing.T) {
 
 	err := repo.Delete(context.TODO(), defaultTestUser.Id)
 	assert.Nil(err)
-	assert.Equal(1, mqe.runQueryCalled)
+	assert.Equal(1, mqe.executeQueryCalled)
 	assert.Equal(1, len(mqe.queries))
 
 	q, err := mqe.queries[0].Build()
@@ -220,26 +220,19 @@ func resetQueryBuilderFuncs() {
 }
 
 type mockQueryExecutor struct {
-	runQueryCalled int
-	runQueryErr    error
-
 	runQueryAndScanSingleResultCalled int
 	runQueryAndScanSingleResultErr    error
 
 	runQueryAndScanAllResultsCalled int
 	runQueryAndScanAllResultsErr    error
 
+	executeQueryCalled int
+	executeQueryErr    error
+
 	result  int
 	scanner *mockScannable
 
 	queries []db.QueryBuilder
-}
-
-func (m *mockQueryExecutor) RunQuery(ctx context.Context, qb db.QueryBuilder) error {
-	m.runQueryCalled++
-	m.queries = append(m.queries, qb)
-
-	return m.runQueryErr
 }
 
 func (m *mockQueryExecutor) RunQueryAndScanSingleResult(ctx context.Context, qb db.QueryBuilder, parser db.RowParser) error {
@@ -266,6 +259,13 @@ func (m *mockQueryExecutor) RunQueryAndScanAllResults(ctx context.Context, qb db
 	}
 
 	return m.runQueryAndScanAllResultsErr
+}
+
+func (m *mockQueryExecutor) ExecuteQueryAffectingSingleRow(ctx context.Context, qb db.QueryBuilder) error {
+	m.executeQueryCalled++
+	m.queries = append(m.queries, qb)
+
+	return m.executeQueryErr
 }
 
 type mockFilterBuilder struct {
