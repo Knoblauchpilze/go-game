@@ -35,8 +35,9 @@ func main() {
 
 func createUserCmdBody(cmd *cobra.Command, args []string) {
 	userDto := dtos.UserDto{
-		Id:       uuid.New(),
-		Mail:     "toto@some-mail.com",
+		Id: uuid.New(),
+		// Id:       uuid.MustParse("cce2e9f5-bc02-402c-9f65-246869c57540"),
+		Mail:     "toto@some-mail3.com",
 		Name:     "toto",
 		Password: "123456",
 	}

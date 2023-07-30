@@ -229,6 +229,9 @@ type mockQueryExecutor struct {
 	runQueryAndScanAllResultsCalled int
 	runQueryAndScanAllResultsErr    error
 
+	executeQueryCalled int
+	executeQueryErr    error
+
 	result  int
 	scanner *mockScannable
 
@@ -266,6 +269,13 @@ func (m *mockQueryExecutor) RunQueryAndScanAllResults(ctx context.Context, qb db
 	}
 
 	return m.runQueryAndScanAllResultsErr
+}
+
+func (m *mockQueryExecutor) ExecuteQuery(ctx context.Context, qb db.QueryBuilder) error {
+	m.executeQueryCalled++
+	m.queries = append(m.queries, qb)
+
+	return m.executeQueryErr
 }
 
 type mockFilterBuilder struct {

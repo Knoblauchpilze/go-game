@@ -4,12 +4,14 @@ import (
 	"context"
 
 	"github.com/KnoblauchPilze/go-game/pkg/errors"
+	"github.com/KnoblauchPilze/go-game/pkg/logger"
 )
 
 type QueryExecutor interface {
 	RunQuery(ctx context.Context, qb QueryBuilder) error
 	RunQueryAndScanSingleResult(ctx context.Context, qb QueryBuilder, parser RowParser) error
 	RunQueryAndScanAllResults(ctx context.Context, qb QueryBuilder, parser RowParser) error
+	ExecuteQuery(ctx context.Context, qb QueryBuilder) error
 }
 
 type queryExecutorImpl struct {
@@ -58,6 +60,22 @@ func (qe *queryExecutorImpl) RunQueryAndScanAllResults(ctx context.Context, qb Q
 	if err := rows.GetAll(parser); err != nil {
 		return errors.WrapCode(err, errors.ErrDbCorruptedData)
 	}
+
+	return nil
+}
+
+func (qe *queryExecutorImpl) ExecuteQuery(ctx context.Context, qb QueryBuilder) error {
+	query, err := qb.Build()
+	if err != nil {
+		return errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
+	}
+
+	res := qe.db.Execute(ctx, query)
+	if err := res.Err(); err != nil {
+		return err
+	}
+
+	logger.ScopedInfof(ctx, "Query affected %d row(s)", res.AffectedRows())
 
 	return nil
 }

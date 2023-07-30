@@ -54,6 +54,7 @@ const (
 	ErrInvalidSqlQueryReceiverType
 	ErrNoRowsReturnedForSqlQuery
 	ErrSqlRowParsingFailed
+	ErrInvalidSqlCommandTag
 
 	ErrNotImplemented
 
@@ -111,6 +112,7 @@ var errorsCodeToMessage = map[ErrorCode]string{
 	ErrInvalidSqlQueryReceiverType: "invalid receiver of a sql query",
 	ErrNoRowsReturnedForSqlQuery:   "sql query returned no rows",
 	ErrSqlRowParsingFailed:         "parsing of sql row failed",
+	ErrInvalidSqlCommandTag:        "invalid sql command tag returned",
 
 	ErrNotImplemented: "not implemented",
 }

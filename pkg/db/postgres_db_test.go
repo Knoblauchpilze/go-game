@@ -227,7 +227,7 @@ func TestPostgresDatabase_Execute_NotConnected(t *testing.T) {
 
 	q := queryImpl{}
 	rows := db.Execute(context.TODO(), q)
-	assert.True(errors.IsErrorWithCode(rows.Err, errors.ErrDbConnectionInvalid))
+	assert.True(errors.IsErrorWithCode(rows.Err(), errors.ErrDbConnectionInvalid))
 }
 
 func TestPostgresDatabase_Execute_Invalid(t *testing.T) {
@@ -245,7 +245,7 @@ func TestPostgresDatabase_Execute_Invalid(t *testing.T) {
 
 	q := queryImpl{}
 	rows := db.Execute(ctx, q)
-	assert.True(errors.IsErrorWithCode(rows.Err, errors.ErrInvalidQuery))
+	assert.True(errors.IsErrorWithCode(rows.Err(), errors.ErrInvalidQuery))
 }
 
 func TestPostgresDatabase_Execute(t *testing.T) {
@@ -312,8 +312,8 @@ func TestPostgresDatabase_Execute_Fail(t *testing.T) {
 		sqlCode: "someSqlCode",
 	}
 	result := db.Execute(ctx, q)
-	assert.True(errors.IsErrorWithCode(result.Err, errors.ErrDbRequestFailed))
-	cause := errors.Unwrap(result.Err)
+	assert.True(errors.IsErrorWithCode(result.Err(), errors.ErrDbRequestFailed))
+	cause := errors.Unwrap(result.Err())
 	assert.Equal(errDefault, cause)
 }
 
@@ -339,8 +339,8 @@ func TestPostgresDatabase_Execute_Timeout(t *testing.T) {
 	result := db.Execute(ctx, q)
 	// Wait for query to finish with some margin.
 	time.Sleep(2 * defaultSleep)
-	assert.True(errors.IsErrorWithCode(result.Err, errors.ErrDbRequestTimeout))
-	cause := errors.Unwrap(result.Err)
+	assert.True(errors.IsErrorWithCode(result.Err(), errors.ErrDbRequestTimeout))
+	cause := errors.Unwrap(result.Err())
 	assert.Equal(context.DeadlineExceeded, cause)
 }
 
