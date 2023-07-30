@@ -259,6 +259,23 @@ func TestQueryExecutor_ExecuteQueryAffectingSingleRow_ExecuteError(t *testing.T)
 	assert.Equal(errDefault, err)
 }
 
+func TestQueryExecutor_ExecuteQueryAffectingSingleRow_NoRowsAffected(t *testing.T) {
+	assert := assert.New(t)
+
+	mqb := mockQueryBuilder{}
+	mr := &mockResult{
+		affectedRows: 0,
+	}
+	mdb := &mockDb{
+		result: mr,
+	}
+
+	qe := NewQueryExecutor(mdb)
+
+	err := qe.ExecuteQueryAffectingSingleRow(context.TODO(), mqb)
+	assert.True(errors.IsErrorWithCode(err, errors.ErrSqlQueryDidNotAffectSingleRow))
+}
+
 func TestQueryExecutor_ExecuteQueryAffectingSingleRow_MultipleRowsAffected(t *testing.T) {
 	assert := assert.New(t)
 
