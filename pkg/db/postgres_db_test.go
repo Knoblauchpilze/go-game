@@ -252,7 +252,9 @@ func TestPostgresDatabase_Execute(t *testing.T) {
 	assert := assert.New(t)
 
 	config := testConfig
-	mockDb := &mockPgxDbFacade{}
+	mockDb := &mockPgxDbFacade{
+		tag: "insert 0 12",
+	}
 	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
 		return mockDb, nil
 	}
@@ -265,7 +267,8 @@ func TestPostgresDatabase_Execute(t *testing.T) {
 		sqlCode: "someSqlCode",
 	}
 	result := db.Execute(ctx, q)
-	assert.Nil(result.Err)
+	assert.Nil(result.Err())
+	assert.Equal(12, result.AffectedRows())
 	assert.Equal(1, len(mockDb.sqlExecuteReceived))
 	assert.Equal("someSqlCode", mockDb.sqlExecuteReceived[0])
 }
@@ -274,7 +277,9 @@ func TestPostgresDatabase_Execute_Verbose(t *testing.T) {
 	assert := assert.New(t)
 
 	config := testConfig
-	mockDb := &mockPgxDbFacade{}
+	mockDb := &mockPgxDbFacade{
+		tag: "insert 0 12",
+	}
 	config.creationFunc = func(config pgx.ConnPoolConfig) (pgxDbFacade, error) {
 		return mockDb, nil
 	}
@@ -288,7 +293,8 @@ func TestPostgresDatabase_Execute_Verbose(t *testing.T) {
 		verbose: true,
 	}
 	result := db.Execute(ctx, q)
-	assert.Nil(result.Err)
+	assert.Nil(result.Err())
+	assert.Equal(12, result.AffectedRows())
 	assert.Equal(1, len(mockDb.sqlExecuteReceived))
 	assert.Equal("someSqlCode", mockDb.sqlExecuteReceived[0])
 }

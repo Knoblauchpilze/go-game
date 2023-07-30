@@ -50,7 +50,7 @@ func TestDbRepository_CreateUser_QueryExecutorError(t *testing.T) {
 	assert := assert.New(t)
 
 	mqe := &mockQueryExecutor{
-		runQueryErr: errDefault,
+		executeQueryErr: errDefault,
 	}
 	repo := NewDbRepository(mqe)
 
@@ -69,7 +69,7 @@ func TestDbRepository_CreateUser(t *testing.T) {
 	out, err := repo.Create(context.TODO(), defaultTestUser)
 	assert.Nil(err)
 	assert.Equal(defaultTestUser.Id, out)
-	assert.Equal(1, mqe.runQueryCalled)
+	assert.Equal(1, mqe.executeQueryCalled)
 	assert.Equal(1, len(mqe.queries))
 
 	q, err := mqe.queries[0].Build()
@@ -132,7 +132,7 @@ func TestDbRepository_Delete_QueryExecutorError(t *testing.T) {
 	assert := assert.New(t)
 
 	mqe := &mockQueryExecutor{
-		runQueryErr: errDefault,
+		executeQueryErr: errDefault,
 	}
 	repo := NewDbRepository(mqe)
 
@@ -168,7 +168,7 @@ func TestDbRepository_Delete(t *testing.T) {
 
 	err := repo.Delete(context.TODO(), defaultTestUser.Id)
 	assert.Nil(err)
-	assert.Equal(1, mqe.runQueryCalled)
+	assert.Equal(1, mqe.executeQueryCalled)
 	assert.Equal(1, len(mqe.queries))
 
 	q, err := mqe.queries[0].Build()
