@@ -7,9 +7,9 @@ import (
 )
 
 type QueryExecutor interface {
-	RunQuery(ctx context.Context, qb QueryBuilder) error
 	RunQueryAndScanSingleResult(ctx context.Context, qb QueryBuilder, parser RowParser) error
 	RunQueryAndScanAllResults(ctx context.Context, qb QueryBuilder, parser RowParser) error
+	ExecuteQueryAffectingSingleRow(ctx context.Context, qb QueryBuilder) error
 }
 
 type queryExecutorImpl struct {
@@ -20,16 +20,6 @@ func NewQueryExecutor(db Database) QueryExecutor {
 	return &queryExecutorImpl{
 		db: db,
 	}
-}
-
-func (qe *queryExecutorImpl) RunQuery(ctx context.Context, qb QueryBuilder) error {
-	rows, err := qe.runQueryAndReturnRows(ctx, qb)
-	if err != nil {
-		return err
-	}
-
-	rows.Close()
-	return nil
 }
 
 func (qe *queryExecutorImpl) RunQueryAndScanSingleResult(ctx context.Context, qb QueryBuilder, parser RowParser) error {
@@ -62,6 +52,22 @@ func (qe *queryExecutorImpl) RunQueryAndScanAllResults(ctx context.Context, qb Q
 	return nil
 }
 
+func (qe *queryExecutorImpl) ExecuteQueryAffectingSingleRow(ctx context.Context, qb QueryBuilder) error {
+	res, err := qe.executeQueryAndReturn(ctx, qb)
+	if err != nil {
+		return err
+	}
+
+	if res.AffectedRows() == 0 {
+		return errors.NewCode(errors.ErrSqlQueryDidNotAffectSingleRow)
+	}
+	if res.AffectedRows() > 1 {
+		return errors.NewCode(errors.ErrSqlQueryAffectedMultipleRows)
+	}
+
+	return nil
+}
+
 func (qe *queryExecutorImpl) runQueryAndReturnRows(ctx context.Context, qb QueryBuilder) (Rows, error) {
 	query, err := qb.Build()
 	if err != nil {
@@ -74,4 +80,18 @@ func (qe *queryExecutorImpl) runQueryAndReturnRows(ctx context.Context, qb Query
 	}
 
 	return rows, nil
+}
+
+func (qe *queryExecutorImpl) executeQueryAndReturn(ctx context.Context, qb QueryBuilder) (Result, error) {
+	query, err := qb.Build()
+	if err != nil {
+		return nil, errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
+	}
+
+	res := qe.db.Execute(ctx, query)
+	if err := res.Err(); err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

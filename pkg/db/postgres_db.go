@@ -130,16 +130,12 @@ func (db *postgresDb) Execute(ctx context.Context, query Query) Result {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 
-	var out Result
-
 	if db.pool == nil {
-		out.Err = errors.NewCode(errors.ErrDbConnectionInvalid)
-		return out
+		return newResult("", errors.NewCode(errors.ErrDbConnectionInvalid))
 	}
 
 	if !query.Valid() {
-		out.Err = errors.NewCode(errors.ErrInvalidQuery)
-		return out
+		return newResult("", errors.NewCode(errors.ErrInvalidQuery))
 	}
 
 	sqlQuery := query.ToSql()
@@ -159,13 +155,10 @@ func (db *postgresDb) Execute(ctx context.Context, query Query) Result {
 	err := common.ExecuteWithContext(p, ctx, db.config.DbQueryTimeout)
 	if err != nil {
 		if err == context.DeadlineExceeded {
-			out.Err = errors.WrapCode(err, errors.ErrDbRequestTimeout)
-			return out
+			return newResult("", errors.WrapCode(err, errors.ErrDbRequestTimeout))
 		}
-		out.Err = errors.WrapCode(err, errors.ErrDbRequestFailed)
-		return out
+		return newResult("", errors.WrapCode(err, errors.ErrDbRequestFailed))
 	}
 
-	out.tag = tag
-	return out
+	return newResult(tag, nil)
 }

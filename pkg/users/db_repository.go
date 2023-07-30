@@ -48,7 +48,7 @@ func (repo *userDbRepo) Create(ctx context.Context, user User) (uuid.UUID, error
 
 	qb.SetVerbose(true)
 
-	if err := repo.qe.RunQuery(ctx, qb); err != nil {
+	if err := repo.qe.ExecuteQueryAffectingSingleRow(ctx, qb); err != nil {
 		return out, errors.WrapCode(err, errors.ErrUserCreationFailure)
 	}
 
@@ -103,7 +103,7 @@ func (repo *userDbRepo) Delete(ctx context.Context, id uuid.UUID) error {
 
 	qb.SetVerbose(true)
 
-	if err := repo.qe.RunQuery(ctx, qb); err != nil {
+	if err := repo.qe.ExecuteQueryAffectingSingleRow(ctx, qb); err != nil {
 		return errors.WrapCode(err, errors.ErrUserDeletionFailure)
 	}
 
