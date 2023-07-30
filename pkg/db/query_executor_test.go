@@ -62,37 +62,58 @@ func TestQueryExecutor_runQueryAndReturnRows(t *testing.T) {
 	assert.Equal(1, mdb.queryCalls)
 }
 
-func TestQueryExecutor_RunQuery(t *testing.T) {
+func TestQueryExecutor_executeQueryAndReturn_BuildError(t *testing.T) {
 	assert := assert.New(t)
 
-	mqb := mockQueryBuilder{}
-	mr := &mockRows{}
-	mdb := &mockDb{
-		rows: mr,
+	mdb := &mockDb{}
+	mqb := mockQueryBuilder{
+		buildErr: errDefault,
 	}
 
-	qe := NewQueryExecutor(mdb)
+	qe := queryExecutorImpl{
+		db: mdb,
+	}
 
-	err := qe.RunQuery(context.TODO(), mqb)
-	assert.Nil(err)
-	assert.Equal(1, mdb.queryCalls)
-	assert.Equal(1, mr.closeCalled)
+	_, err := qe.executeQueryAndReturn(context.TODO(), mqb)
+	assert.True(errors.IsErrorWithCode(err, errors.ErrDbRequestCreationFailed))
+	cause := errors.Unwrap(err)
+	assert.Equal(errDefault, cause)
 }
 
-func TestQueryExecutor_RunQuery_Error(t *testing.T) {
+func TestQueryExecutor_executeQueryAndReturn_QueryError(t *testing.T) {
 	assert := assert.New(t)
 
 	mqb := mockQueryBuilder{}
 	mdb := &mockDb{
-		rows: &mockRows{
+		result: &mockResult{
 			err: errDefault,
 		},
 	}
 
-	qe := NewQueryExecutor(mdb)
+	qe := queryExecutorImpl{
+		db: mdb,
+	}
 
-	err := qe.RunQuery(context.TODO(), mqb)
+	_, err := qe.executeQueryAndReturn(context.TODO(), mqb)
 	assert.Equal(errDefault, err)
+}
+
+func TestQueryExecutor_executeQueryAndReturn(t *testing.T) {
+	assert := assert.New(t)
+
+	mqb := mockQueryBuilder{}
+	mr := &mockResult{}
+	mdb := &mockDb{
+		result: mr,
+	}
+
+	qe := queryExecutorImpl{
+		db: mdb,
+	}
+
+	_, err := qe.executeQueryAndReturn(context.TODO(), mqb)
+	assert.Nil(err)
+	assert.Equal(1, mdb.executeCalls)
 }
 
 func TestQueryExecutor_RunQueryAndScanSingleResult(t *testing.T) {
@@ -203,6 +224,58 @@ func TestQueryExecutor_RunQueryAndScanAllResults_ScanError(t *testing.T) {
 	assert.Equal(1, mr.closeCalled)
 }
 
+func TestQueryExecutor_ExecuteQueryAffectingSingleRow(t *testing.T) {
+	assert := assert.New(t)
+
+	mqb := mockQueryBuilder{}
+	mr := &mockResult{
+		affectedRows: 1,
+	}
+	mdb := &mockDb{
+		result: mr,
+	}
+
+	qe := NewQueryExecutor(mdb)
+
+	err := qe.ExecuteQueryAffectingSingleRow(context.TODO(), mqb)
+	assert.Nil(err)
+	assert.Equal(1, mdb.executeCalls)
+}
+
+func TestQueryExecutor_ExecuteQueryAffectingSingleRow_ExecuteError(t *testing.T) {
+	assert := assert.New(t)
+
+	mqb := mockQueryBuilder{}
+	mr := &mockResult{
+		err: errDefault,
+	}
+	mdb := &mockDb{
+		result: mr,
+	}
+
+	qe := NewQueryExecutor(mdb)
+
+	err := qe.ExecuteQueryAffectingSingleRow(context.TODO(), mqb)
+	assert.Equal(errDefault, err)
+}
+
+func TestQueryExecutor_ExecuteQueryAffectingSingleRow_MultipleRowsAffected(t *testing.T) {
+	assert := assert.New(t)
+
+	mqb := mockQueryBuilder{}
+	mr := &mockResult{
+		affectedRows: 2,
+	}
+	mdb := &mockDb{
+		result: mr,
+	}
+
+	qe := NewQueryExecutor(mdb)
+
+	err := qe.ExecuteQueryAffectingSingleRow(context.TODO(), mqb)
+	assert.True(errors.IsErrorWithCode(err, errors.ErrSqlQueryDidNotAffectSingleRow))
+}
+
 type mockQueryBuilder struct {
 	buildErr error
 }
@@ -286,4 +359,19 @@ func (m *mockRows) GetAll(parser RowParser) error {
 		m.allScanErr = parser.ScanRow(m.getAllScannable)
 	}
 	return m.getAllErr
+}
+
+type mockResult struct {
+	err                error
+	affectedRowsCalled int
+	affectedRows       int
+}
+
+func (m *mockResult) Err() error {
+	return m.err
+}
+
+func (m *mockResult) AffectedRows() int {
+	m.affectedRowsCalled++
+	return m.affectedRows
 }

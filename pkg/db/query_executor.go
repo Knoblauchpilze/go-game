@@ -4,14 +4,12 @@ import (
 	"context"
 
 	"github.com/KnoblauchPilze/go-game/pkg/errors"
-	"github.com/KnoblauchPilze/go-game/pkg/logger"
 )
 
 type QueryExecutor interface {
-	RunQuery(ctx context.Context, qb QueryBuilder) error
 	RunQueryAndScanSingleResult(ctx context.Context, qb QueryBuilder, parser RowParser) error
 	RunQueryAndScanAllResults(ctx context.Context, qb QueryBuilder, parser RowParser) error
-	ExecuteQuery(ctx context.Context, qb QueryBuilder) error
+	ExecuteQueryAffectingSingleRow(ctx context.Context, qb QueryBuilder) error
 }
 
 type queryExecutorImpl struct {
@@ -22,16 +20,6 @@ func NewQueryExecutor(db Database) QueryExecutor {
 	return &queryExecutorImpl{
 		db: db,
 	}
-}
-
-func (qe *queryExecutorImpl) RunQuery(ctx context.Context, qb QueryBuilder) error {
-	rows, err := qe.runQueryAndReturnRows(ctx, qb)
-	if err != nil {
-		return err
-	}
-
-	rows.Close()
-	return nil
 }
 
 func (qe *queryExecutorImpl) RunQueryAndScanSingleResult(ctx context.Context, qb QueryBuilder, parser RowParser) error {
@@ -64,18 +52,15 @@ func (qe *queryExecutorImpl) RunQueryAndScanAllResults(ctx context.Context, qb Q
 	return nil
 }
 
-func (qe *queryExecutorImpl) ExecuteQuery(ctx context.Context, qb QueryBuilder) error {
-	query, err := qb.Build()
+func (qe *queryExecutorImpl) ExecuteQueryAffectingSingleRow(ctx context.Context, qb QueryBuilder) error {
+	res, err := qe.executeQueryAndReturn(ctx, qb)
 	if err != nil {
-		return errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
-	}
-
-	res := qe.db.Execute(ctx, query)
-	if err := res.Err(); err != nil {
 		return err
 	}
 
-	logger.ScopedInfof(ctx, "Query affected %d row(s)", res.AffectedRows())
+	if res.AffectedRows() != 1 {
+		return errors.NewCode(errors.ErrSqlQueryDidNotAffectSingleRow)
+	}
 
 	return nil
 }
@@ -92,4 +77,18 @@ func (qe *queryExecutorImpl) runQueryAndReturnRows(ctx context.Context, qb Query
 	}
 
 	return rows, nil
+}
+
+func (qe *queryExecutorImpl) executeQueryAndReturn(ctx context.Context, qb QueryBuilder) (Result, error) {
+	query, err := qb.Build()
+	if err != nil {
+		return nil, errors.WrapCode(err, errors.ErrDbRequestCreationFailed)
+	}
+
+	res := qe.db.Execute(ctx, query)
+	if err := res.Err(); err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

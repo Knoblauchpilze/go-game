@@ -220,9 +220,6 @@ func resetQueryBuilderFuncs() {
 }
 
 type mockQueryExecutor struct {
-	runQueryCalled int
-	runQueryErr    error
-
 	runQueryAndScanSingleResultCalled int
 	runQueryAndScanSingleResultErr    error
 
@@ -236,13 +233,6 @@ type mockQueryExecutor struct {
 	scanner *mockScannable
 
 	queries []db.QueryBuilder
-}
-
-func (m *mockQueryExecutor) RunQuery(ctx context.Context, qb db.QueryBuilder) error {
-	m.runQueryCalled++
-	m.queries = append(m.queries, qb)
-
-	return m.runQueryErr
 }
 
 func (m *mockQueryExecutor) RunQueryAndScanSingleResult(ctx context.Context, qb db.QueryBuilder, parser db.RowParser) error {
@@ -271,7 +261,7 @@ func (m *mockQueryExecutor) RunQueryAndScanAllResults(ctx context.Context, qb db
 	return m.runQueryAndScanAllResultsErr
 }
 
-func (m *mockQueryExecutor) ExecuteQuery(ctx context.Context, qb db.QueryBuilder) error {
+func (m *mockQueryExecutor) ExecuteQueryAffectingSingleRow(ctx context.Context, qb db.QueryBuilder) error {
 	m.executeQueryCalled++
 	m.queries = append(m.queries, qb)
 

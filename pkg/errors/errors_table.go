@@ -55,6 +55,7 @@ const (
 	ErrNoRowsReturnedForSqlQuery
 	ErrSqlRowParsingFailed
 	ErrInvalidSqlCommandTag
+	ErrSqlQueryDidNotAffectSingleRow
 
 	ErrNotImplemented
 
@@ -104,15 +105,16 @@ var errorsCodeToMessage = map[ErrorCode]string{
 	ErrNoColumnInSqlInsertQuery:  "no column set for sql query",
 	ErrNoColumnInSqlUpdateQuery:  "no column set for sql query",
 
-	ErrDbCorruptedData:             "failed to interpret data from database",
-	ErrDbRequestCreationFailed:     "failed to create database request",
-	ErrDbRequestFailed:             "failed to query data from database",
-	ErrDbRequestTimeout:            "query to database timed out",
-	ErrMultiValuedDbElement:        "multiple values for expected unique database entry",
-	ErrInvalidSqlQueryReceiverType: "invalid receiver of a sql query",
-	ErrNoRowsReturnedForSqlQuery:   "sql query returned no rows",
-	ErrSqlRowParsingFailed:         "parsing of sql row failed",
-	ErrInvalidSqlCommandTag:        "invalid sql command tag returned",
+	ErrDbCorruptedData:               "failed to interpret data from database",
+	ErrDbRequestCreationFailed:       "failed to create database request",
+	ErrDbRequestFailed:               "sql query execution returned error",
+	ErrDbRequestTimeout:              "query to database timed out",
+	ErrMultiValuedDbElement:          "multiple values for expected unique database entry",
+	ErrInvalidSqlQueryReceiverType:   "invalid receiver of a sql query",
+	ErrNoRowsReturnedForSqlQuery:     "sql query returned no rows",
+	ErrSqlRowParsingFailed:           "parsing of sql row failed",
+	ErrInvalidSqlCommandTag:          "invalid sql command tag returned",
+	ErrSqlQueryDidNotAffectSingleRow: "sql query did not affect a single row",
 
 	ErrNotImplemented: "not implemented",
 }
